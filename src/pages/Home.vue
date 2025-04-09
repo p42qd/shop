@@ -5,6 +5,16 @@
       <input v-model="searchQuery" placeholder="상품 검색" class="search" />
     </header>
 
+    <!-- 관리자 페이지 버튼들 -->
+    <div class="admin-buttons">
+      <router-link to="/admin/categories">
+        <button class="admin-button">카테고리 관리</button>
+      </router-link>
+      <router-link to="/admin/products/add">
+        <button class="admin-button">상품 등록</button>
+      </router-link>
+    </div>
+
     <div class="layout">
       <!-- 카테고리 사이드바 -->
       <aside class="sidebar">
@@ -267,5 +277,27 @@ onMounted(async () => {
   text-align: center;
   border-radius: 6px;
   font-size: 14px;
+}
+
+/* 관리자 페이지 버튼 스타일 */
+.admin-buttons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  justify-content: center;
+}
+
+.admin-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-button:hover {
+  background-color: #0056b3;
 }
 </style>
