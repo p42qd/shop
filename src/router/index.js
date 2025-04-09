@@ -7,8 +7,8 @@ import ProductAdd from '../pages/ProductAdd.vue';
 const routes = [
   { path: '/', component: Home },
   { path: '/product/:id', component: Product },
-  { path: '/admin/categories', component: CategoryManager },
-  { path: '/admin/products/add', component: ProductAdd }, // ✅ 추가
+  { path: '/testad/categories', component: CategoryManager },
+  { path: '/testad/products/add', component: ProductAdd }, // ✅ 추가
 ];
 
 export const router = createRouter({
