@@ -2,17 +2,44 @@
   <div class="container">
     <header class="header">
       <h1>Simple Wear</h1>
+      <!-- <div class="admin-buttons">
+        <router-link to="/admin/categories">
+          <button class="admin-button">카테고리 관리</button>
+        </router-link>
+        <router-link to="/admin/products/add">
+          <button class="admin-button">상품 등록</button>
+        </router-link>
+      </div> -->
+      <button class="hamburger" @click="menuOpen = !menuOpen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       <input v-model="searchQuery" placeholder="상품 검색" class="search" />
     </header>
-
-    <!-- 관리자 페이지 버튼들 -->
-    <div class="admin-buttons">
-      <router-link to="/admin/categories">
-        <button class="admin-button">카테고리 관리</button>
-      </router-link>
-      <router-link to="/admin/products/add">
-        <button class="admin-button">상품 등록</button>
-      </router-link>
+    <div class="mobile-menu" v-if="menuOpen">
+      <aside class="mobile-sidebar">
+        <div v-for="(cat, catName) in categoryMap" :key="cat.id">
+          <button
+            class="category"
+            :class="{ active: selectedCategoryId === cat.id }"
+            @click="toggleCategory(cat.id)"
+          >
+            {{ catName }}
+          </button>
+          <div v-if="selectedCategoryId === cat.id">
+            <button
+              v-for="sub in cat.subs"
+              :key="sub.id"
+              class="subcategory"
+              :class="{ active: selectedSubId === sub.id }"
+              @click="toggleSubCategory(sub.id)"
+            >
+              ㆍ{{ sub.name }}
+            </button>
+          </div>
+        </div>
+      </aside>
     </div>
 
     <div class="layout">
@@ -87,6 +114,7 @@ const selectedSubId = ref(null);
 
 const categoryMap = ref({});
 const PRODUCTS = ref([]);
+const menuOpen = ref(false)
 
 function formatPrice(price) {
   return Number(price).toLocaleString();
@@ -103,6 +131,7 @@ function toggleCategory(id) {
 }
 
 function toggleSubCategory(id) {
+  menuOpen.value = false
   selectedSubId.value = selectedSubId.value === id ? null : id;
 }
 
@@ -110,7 +139,6 @@ function goToDetail(id) {
   router.push(`/product/${id}`);
 }
 
-// ⭐ 카테고리 필터된 목록만 표시
 const filteredCategoryMap = computed(() => {
   if (!selectedCategoryId.value) return categoryMap.value;
 
@@ -123,7 +151,6 @@ const filteredCategoryMap = computed(() => {
   return result;
 });
 
-// ⭐ 카테고리별 상품 필터링
 function filteredByCategory(categoryId) {
   return PRODUCTS.value.filter(p => {
     const matchCat = p.category_id === categoryId;
@@ -166,20 +193,79 @@ onMounted(async () => {
 
 <style scoped>
 .container {
-  padding: 24px;
+  /* padding: 24px; */
   background-color: #f9fafb;
   min-height: 100vh;
   font-family: system-ui, sans-serif;
+  margin-top: 131px;
 }
 .header {
   display: flex;
+  position: fixed;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
+  top: 0;
+  width: 100vw;
+  /* height: 65px; */
+  padding-right: 24px;
+  padding-left: 5px;
   padding-bottom: 16px;
   border-bottom: 1px solid #ddd;
+  background-color: #fff;
+  z-index: 1;
 }
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.hamburger span {
+  display: block;
+  height: 3px;
+  background: #333;
+  border-radius: 2px;
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 131px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+@media (min-width: 768px) {
+  .container {
+    /* padding: 24px; */
+    margin-top: 70px;
+  }
+  .header {
+    padding-bottom: 0px;
+    padding-left: 24px;
+  }
+  .hamburger {
+    display: none;
+  }
+  .header h1 {
+    width: 200px !important;
+    font-size: 24px;
+    font-weight: bold;
+    color: #222;
+  }
+}
+
 .header h1 {
   font-size: 24px;
+  text-align: center;
+  width: 100%;
   font-weight: bold;
   color: #222;
 }
@@ -192,15 +278,38 @@ onMounted(async () => {
 }
 .layout {
   display: flex;
+  flex-direction: column;
   gap: 20px;
   margin-top: 24px;
 }
+@media (min-width: 768px) {
+  .layout {
+    flex-direction: row;
+  }
+}
 .sidebar {
-  width: 220px;
+  width: 100%;
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 12px;
+  display: none;
+}
+
+.mobile-sidebar {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 0px 0px 8px 8px;
+  padding: 12px;
+}
+@media (min-width: 768px) {
+  ..mobile-sidebar {
+    display: none
+  }
+  .sidebar {
+    width: 220px;
+    display: block;
+  }
 }
 .category,
 .subcategory {
@@ -241,8 +350,18 @@ onMounted(async () => {
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+}
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
 }
 .card {
   background: #fff;
@@ -278,15 +397,12 @@ onMounted(async () => {
   border-radius: 6px;
   font-size: 14px;
 }
-
-/* 관리자 페이지 버튼 스타일 */
 .admin-buttons {
   display: flex;
   gap: 16px;
-  margin-bottom: 24px;
   justify-content: center;
+  align-items: center;
 }
-
 .admin-button {
   padding: 10px 20px;
   font-size: 16px;
@@ -296,7 +412,6 @@ onMounted(async () => {
   border-radius: 8px;
   cursor: pointer;
 }
-
 .admin-button:hover {
   background-color: #0056b3;
 }

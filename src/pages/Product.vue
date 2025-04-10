@@ -27,6 +27,15 @@
         <p class="price">{{ formatPrice(product.price) }}원</p>
         <p class="description">{{ product.description }}</p>
       </div>
+
+      <div class="sub-image-list">
+        <img
+            v-for="(img, i) in subImages"
+            :key="i"
+            :src="img.image_url"
+            class="sub-image"
+          />
+      </div>
     </div>
   </div>
 
@@ -164,6 +173,15 @@ onMounted(async () => {
   color: #555;
   line-height: 1.6;
 }
+
+.sub-image-list {
+  width: 100%;
+}
+
+.sub-image {
+  width: 100%;
+}
+
 
 /* ✅ 반응형: 모바일에서 이미지 위에 상품명 (겹치지 않고 위에 고정) */
 @media (max-width: 640px) {
