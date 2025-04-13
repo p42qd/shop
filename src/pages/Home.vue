@@ -10,12 +10,15 @@
           <button class="admin-button">상품 등록</button>
         </router-link>
       </div> -->
-      <button class="hamburger" @click="menuOpen = !menuOpen">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-      <input v-model="searchQuery" placeholder="상품 검색" class="search" />
+      <div class="hamburger" @click="menuOpen = !menuOpen">
+        <i data-lucide="menu"></i>
+      </div>
+      <form class="search-form">
+        <input class="search" type="text" placeholder="검색어를 입력하세요" />
+        <button type="submit">
+          <i data-lucide="search"></i>
+        </button>
+      </form>
     </header>
     <div class="mobile-menu" v-if="menuOpen">
       <aside class="mobile-sidebar">
@@ -69,6 +72,21 @@
 
       <!-- 상품 섹션 -->
       <main class="main">
+        <!-- 상단 공지 및 SNS -->
+        <div class="top-info">
+          <div class="notice">
+            📢 오늘 신규 상품 30% 할인! ~23:59까지
+          </div>
+          <div class="socials">
+            <div class="line">
+              <span>💬 카톡: @simplewear</span>
+              <span>📱 인스타: @simplewear</span>
+            </div>
+            <div class="line">
+              <span>📢 텔레그램: @simplewear</span>
+            </div>
+          </div>
+        </div>
         <section
           v-for="(cat, catName) in filteredCategoryMap"
           :key="cat.id"
@@ -207,9 +225,9 @@ onMounted(async () => {
   align-items: center;
   gap: 16px;
   top: 0;
-  width: 100vw;
-  /* height: 65px; */
-  padding-right: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 5px;
   padding-left: 5px;
   padding-bottom: 16px;
   border-bottom: 1px solid #ddd;
@@ -217,29 +235,21 @@ onMounted(async () => {
   z-index: 1;
 }
 
-.hamburger {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 24px;
-  height: 18px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-}
-.hamburger span {
-  display: block;
-  height: 3px;
-  background: #333;
-  border-radius: 2px;
-}
-
 .mobile-menu {
   position: fixed;
   top: 131px;
   width: 100%;
   background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.hamburger {
+  padding: 3px;
+}
+
+.hamburger i {
+  width: 25px;
+  height: 25px;
 }
 
 @media (min-width: 768px) {
@@ -250,6 +260,7 @@ onMounted(async () => {
   .header {
     padding-bottom: 0px;
     padding-left: 24px;
+    padding-right: 24px;
   }
   .hamburger {
     display: none;
@@ -269,12 +280,32 @@ onMounted(async () => {
   font-weight: bold;
   color: #222;
 }
+.search-form {
+  display: flex;
+  align-items: center;
+}
+
+.search-form button {
+  padding: 8px;
+  background-color: #007BFF;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  color: white;
+}
+
+.search-form button i {
+  width: 20px;
+  height: 20px;
+}
+
 .search {
-  padding: 8px 12px;
+  padding: 8px;
+  font-size: 16px;
+  height: 25px;
   border: 1px solid #ccc;
-  border-radius: 6px;
-  width: 220px;
-  font-size: 14px;
+  border-radius: 4px 0 0 4px;
+  outline: none;
 }
 .layout {
   display: flex;
@@ -335,6 +366,54 @@ onMounted(async () => {
   background-color: #cce2ff;
   font-weight: bold;
 }
+.top-info {
+  background-color: #fefefe;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  border-bottom: 1px solid #ddd;
+  color: #333;
+  text-align: center;
+}
+.notice {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.socials {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 13px;
+  gap: 4px;
+  line-height: 1.4;
+  margin-top: 4px;
+  text-align: center;
+}
+.socials .line {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+@media (min-width: 768px) {
+  .top-info {
+    font-size: 15px;
+    padding: 8px 24px;
+  }
+  .notice {
+    margin-bottom: 2px;
+  }
+  .socials {
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+  }
+  .socials .line {
+    flex-wrap: nowrap;
+  }
+}
+
+
 .main {
   flex: 1;
   background: #fff;
