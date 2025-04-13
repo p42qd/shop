@@ -215,7 +215,7 @@ onMounted(async () => {
   background-color: #f9fafb;
   min-height: 100vh;
   font-family: system-ui, sans-serif;
-  margin-top: 131px;
+  margin-top: 140px;
 }
 .header {
   display: flex;
@@ -368,8 +368,8 @@ onMounted(async () => {
 }
 .top-info {
   background-color: #fefefe;
-  padding: 6px 12px;
-  font-size: 14px;
+  padding: 18px 12px;
+  font-size: 15px;
   line-height: 1.5;
   border-bottom: 1px solid #ddd;
   color: #333;
@@ -383,7 +383,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 13px;
+  font-size: 14px;
   gap: 4px;
   line-height: 1.4;
   margin-top: 4px;
@@ -405,12 +405,13 @@ onMounted(async () => {
 .socials span {
   display: flex;
   align-items: center;
+  font-weight: bold;
   gap: 4px;
 }
 @media (min-width: 768px) {
   .top-info {
     font-size: 15px;
-    padding: 8px 24px;
+    padding: 24px 24px;
   }
   .notice {
     margin-bottom: 2px;
@@ -429,7 +430,7 @@ onMounted(async () => {
 .main {
   flex: 1;
   background: #fff;
-  padding: 16px;
+  padding:0px 16px 16px 16px;
   border-radius: 8px;
   border: 1px solid #ddd;
 }
