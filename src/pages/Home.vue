@@ -303,7 +303,7 @@ onMounted(async () => {
   padding: 12px;
 }
 @media (min-width: 768px) {
-  ..mobile-sidebar {
+  .mobile-sidebar {
     display: none
   }
   .sidebar {
