@@ -11,12 +11,12 @@
         </router-link>
       </div> -->
       <div class="hamburger" @click="menuOpen = !menuOpen">
-        <i data-lucide="menu"></i>
+        <span class="material-symbols-outlined">menu</span>
       </div>
       <form class="search-form">
         <input class="search" type="text" placeholder="검색어를 입력하세요" />
         <button type="submit">
-          <i data-lucide="search"></i>
+          <span class="material-symbols-outlined">search</span>
         </button>
       </form>
     </header>
