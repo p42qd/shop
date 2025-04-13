@@ -75,15 +75,15 @@
         <!-- 상단 공지 및 SNS -->
         <div class="top-info">
           <div class="notice">
-            📢 오늘 신규 상품 30% 할인! ~23:59까지
+            📢 홈페이지에 없는 상품은 아래 연락처로 문의 주세요.
           </div>
           <div class="socials">
             <div class="line">
-              <span>💬 카톡: @simplewear</span>
-              <span>📱 인스타: @simplewear</span>
+              <span><img src="../assets/icnos/kakaotalk.png" alt="카카오톡" class="sns-icon" />hamao</span>
+              <span><img src="../assets/icnos/instagram.png" alt="인스타그램" class="sns-icon" />hamao_select</span>
             </div>
             <div class="line">
-              <span>📢 텔레그램: @simplewear</span>
+              <span><img src="../assets/icnos/telegram.png" alt="텔레그램" class="sns-icon" />hamaobuy</span>
             </div>
           </div>
         </div>
@@ -394,6 +394,18 @@ onMounted(async () => {
   gap: 16px;
   flex-wrap: wrap;
   justify-content: center;
+}
+.sns-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.socials span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 @media (min-width: 768px) {
   .top-info {
