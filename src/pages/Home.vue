@@ -1,7 +1,10 @@
 <template>
   <div class="container">
     <header class="header">
-      <h1>HAMAO</h1>
+      <div class="title">
+        <img src="../assets/icnos/hamao_logo.png" alt="이미지" class="hamao-logo" />
+        <img src="../assets/icnos/hamao_text.png" alt="HAMAO" class="hamao-text" />
+      </div>
       <!-- <div class="admin-buttons">
         <router-link to="/admin/categories">
           <button class="admin-button">카테고리 관리</button>
@@ -265,21 +268,37 @@ onMounted(async () => {
   .hamburger {
     display: none;
   }
-  .header h1 {
+  .header .title {
     width: 200px !important;
-    font-size: 24px;
-    font-weight: bold;
-    color: #222;
+  }
+  .hamao-logo {
+    width: 35px;
+    height: 35px;
+  }
+
+  .hamao-text {
+    height: 35px;;
   }
 }
 
-.header h1 {
-  font-size: 24px;
-  text-align: center;
+.header .title {
   width: 100%;
-  font-weight: bold;
-  color: #222;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin: 15px 0;
 }
+
+.hamao-logo {
+  width: 35px;
+  height: 35px;
+}
+
+.hamao-text {
+  height: 35px;;
+}
+
 .search-form {
   display: flex;
   align-items: center;

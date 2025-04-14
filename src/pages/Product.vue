@@ -97,7 +97,7 @@ onMounted(async () => {
 .container {
   max-width: 1024px;
   margin: auto;
-  padding: 24px;
+  /* padding: 24px; */
   font-family: system-ui, sans-serif;
 }
 
