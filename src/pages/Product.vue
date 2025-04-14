@@ -29,12 +29,15 @@
       </div>
 
       <div class="sub-image-list">
-        <img
+        <div class="sub-image-grid">
+          <div
             v-for="(img, i) in subImages"
             :key="i"
-            :src="img.image_url"
-            class="sub-image"
-          />
+            class="sub-image-wrapper"
+          >
+            <img :src="img.image_url" class="sub-image" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -128,6 +131,8 @@ onMounted(async () => {
 .main-image {
   width: 100%;
   max-width: 500px;
+  height: 500px;
+  object-fit: cover;
   border-radius: 8px;
   margin-bottom: 12px;
 }
@@ -176,12 +181,32 @@ onMounted(async () => {
 
 .sub-image-list {
   width: 100%;
+  margin-top: 24px;
+}
+
+.sub-image-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.sub-image-wrapper {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 8px;
 }
 
 .sub-image {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
+@media (min-width: 768px) {
+  .sub-image-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
 
 /* ✅ 반응형: 모바일에서 이미지 위에 상품명 (겹치지 않고 위에 고정) */
 @media (max-width: 640px) {

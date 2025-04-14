@@ -113,7 +113,7 @@ onMounted(() => {
 const uploadImage = async (file, path) => {
   const { error } = await supabase.storage.from('product-images').upload(path, file);
   if (error) throw new Error('이미지 업로드 실패: ' + error.message);
-  return path; // ← 경로만 반환하도록 변경
+  return path;
 };
 
 const getImageUrl = (path) => {
@@ -158,11 +158,12 @@ const addProduct = async () => {
         category_id: newProduct.value.category_id,
         sub_id: newProduct.value.sub_id,
       }])
+      .select()
       .single();
 
-    if (productError) {
-      alert('상품 등록 실패: ' + productError.message);
-      console.error('상품 등록 실패:', productError.message);
+    if (productError || !productData) {
+      alert('상품 등록 실패: ' + (productError?.message || '데이터 없음'));
+      console.error('상품 등록 실패:', productError?.message);
       return;
     }
 

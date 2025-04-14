@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <header class="header">
-      <h1>Simple Wear</h1>
+      <h1>HAMAO</h1>
       <!-- <div class="admin-buttons">
         <router-link to="/admin/categories">
           <button class="admin-button">카테고리 관리</button>
