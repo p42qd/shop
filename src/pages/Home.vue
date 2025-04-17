@@ -1,18 +1,10 @@
 <template>
   <div class="container">
-    <header class="header">
+    <!-- <header class="header">
       <div class="title">
         <img src="../assets/icnos/hamao_logo.png" alt="이미지" class="hamao-logo" />
         <img src="../assets/icnos/hamao_text.png" alt="HAMAO" class="hamao-text" />
       </div>
-      <!-- <div class="admin-buttons">
-        <router-link to="/admin/categories">
-          <button class="admin-button">카테고리 관리</button>
-        </router-link>
-        <router-link to="/admin/products/add">
-          <button class="admin-button">상품 등록</button>
-        </router-link>
-      </div> -->
       <div class="hamburger" @click="menuOpen = !menuOpen">
         <span class="material-symbols-outlined">menu</span>
       </div>
@@ -46,7 +38,7 @@
           </div>
         </div>
       </aside>
-    </div>
+    </div> -->
 
     <div class="layout">
       <!-- 카테고리 사이드바 -->
@@ -213,119 +205,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.container {
-  /* padding: 24px; */
-  background-color: #f9fafb;
-  min-height: 100vh;
-  font-family: system-ui, sans-serif;
-  margin-top: 140px;
-}
-.header {
-  display: flex;
-  position: fixed;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  top: 0;
-  width: 100%;
-  box-sizing: border-box;
-  padding-right: 5px;
-  padding-left: 5px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #ddd;
-  background-color: #fff;
-  z-index: 1;
-}
-
-.mobile-menu {
-  position: fixed;
-  top: 131px;
-  width: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1;
-}
-
-.hamburger {
-  padding: 3px;
-}
-
-.hamburger i {
-  width: 25px;
-  height: 25px;
-}
-
-@media (min-width: 768px) {
-  .container {
-    /* padding: 24px; */
-    margin-top: 70px;
-  }
-  .header {
-    padding-bottom: 0px;
-    padding-left: 24px;
-    padding-right: 24px;
-  }
-  .hamburger {
-    display: none;
-  }
-  .header .title {
-    width: 200px !important;
-  }
-  .hamao-logo {
-    width: 35px;
-    height: 35px;
-  }
-
-  .hamao-text {
-    height: 35px;;
-  }
-}
-
-.header .title {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-  margin: 15px 0;
-}
-
-.hamao-logo {
-  width: 35px;
-  height: 35px;
-}
-
-.hamao-text {
-  height: 35px;;
-}
-
-.search-form {
-  display: flex;
-  align-items: center;
-}
-
-.search-form button {
-  padding: 8px;
-  background-color: #007BFF;
-  border: none;
-  border-radius: 0 4px 4px 0;
-  cursor: pointer;
-  color: white;
-}
-
-.search-form button i {
-  width: 20px;
-  height: 20px;
-}
-
-.search {
-  padding: 8px;
-  font-size: 16px;
-  height: 25px;
-  border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
-  outline: none;
-}
 .layout {
   display: flex;
   flex-direction: column;
@@ -346,12 +225,6 @@ onMounted(async () => {
   display: none;
 }
 
-.mobile-sidebar {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 0px 0px 8px 8px;
-  padding: 12px;
-}
 @media (min-width: 768px) {
   .mobile-sidebar {
     display: none
