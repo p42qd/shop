@@ -1,45 +1,5 @@
 <template>
   <div class="container">
-    <!-- <header class="header">
-      <div class="title">
-        <img src="../assets/icnos/hamao_logo.png" alt="이미지" class="hamao-logo" />
-        <img src="../assets/icnos/hamao_text.png" alt="HAMAO" class="hamao-text" />
-      </div>
-      <div class="hamburger" @click="menuOpen = !menuOpen">
-        <span class="material-symbols-outlined">menu</span>
-      </div>
-      <form class="search-form">
-        <input class="search" type="text" placeholder="검색어를 입력하세요" />
-        <button type="submit">
-          <span class="material-symbols-outlined">search</span>
-        </button>
-      </form>
-    </header>
-    <div class="mobile-menu" v-if="menuOpen">
-      <aside class="mobile-sidebar">
-        <div v-for="(cat, catName) in categoryMap" :key="cat.id">
-          <button
-            class="category"
-            :class="{ active: selectedCategoryId === cat.id }"
-            @click="toggleCategory(cat.id)"
-          >
-            {{ catName }}
-          </button>
-          <div v-if="selectedCategoryId === cat.id">
-            <button
-              v-for="sub in cat.subs"
-              :key="sub.id"
-              class="subcategory"
-              :class="{ active: selectedSubId === sub.id }"
-              @click="toggleSubCategory(sub.id)"
-            >
-              ㆍ{{ sub.name }}
-            </button>
-          </div>
-        </div>
-      </aside>
-    </div> -->
-
     <div class="layout">
       <!-- 카테고리 사이드바 -->
       <aside class="sidebar">
@@ -59,7 +19,7 @@
               :class="{ active: selectedSubId === sub.id }"
               @click="toggleSubCategory(sub.id)"
             >
-              ㆍ{{ sub.name }}
+              {{ sub.name }}
             </button>
           </div>
         </div>
@@ -67,7 +27,6 @@
 
       <!-- 상품 섹션 -->
       <main class="main">
-        <!-- 상단 공지 및 SNS -->
         <div class="top-info">
           <div class="notice">
             📢 홈페이지에 없는 상품은 아래 연락처로 문의 주세요.
@@ -88,7 +47,6 @@
           class="category-section"
         >
           <h2>{{ catName }}</h2>
-
           <div v-if="filteredByCategory(cat.id).length">
             <div class="grid">
               <div
@@ -100,7 +58,6 @@
                 <img :src="product.image_url" :alt="product.name" />
                 <div class="card-body">
                   {{ product.name }}<br />
-                  <span>{{ formatPrice(product.price) }}원</span>
                 </div>
               </div>
             </div>
@@ -120,18 +77,12 @@ import { useRouter } from 'vue-router';
 import { supabase } from '../supabase';
 
 const router = useRouter();
-
 const searchQuery = ref('');
 const selectedCategoryId = ref(null);
 const selectedSubId = ref(null);
-
 const categoryMap = ref({});
 const PRODUCTS = ref([]);
-const menuOpen = ref(false)
-
-function formatPrice(price) {
-  return Number(price).toLocaleString();
-}
+const menuOpen = ref(false);
 
 function toggleCategory(id) {
   if (selectedCategoryId.value === id) {
@@ -144,7 +95,7 @@ function toggleCategory(id) {
 }
 
 function toggleSubCategory(id) {
-  menuOpen.value = false
+  menuOpen.value = false;
   selectedSubId.value = selectedSubId.value === id ? null : id;
 }
 
@@ -154,7 +105,6 @@ function goToDetail(id) {
 
 const filteredCategoryMap = computed(() => {
   if (!selectedCategoryId.value) return categoryMap.value;
-
   const result = {};
   for (const [name, cat] of Object.entries(categoryMap.value)) {
     if (cat.id === selectedCategoryId.value) {
@@ -179,9 +129,7 @@ onMounted(async () => {
     .select('id, name, subcategories(id, name)')
     .order('id');
 
-  if (catErr) {
-    console.error('❌ 카테고리 불러오기 실패:', catErr.message);
-  } else {
+  if (!catErr) {
     const map = {};
     catData.forEach(cat => {
       map[cat.name] = {
@@ -196,9 +144,7 @@ onMounted(async () => {
     .from('products')
     .select('id, name, price, image_url, category_id, sub_id');
 
-  if (prodErr) {
-    console.error('❌ 상품 불러오기 실패:', prodErr.message);
-  } else {
+  if (!prodErr) {
     PRODUCTS.value = prodData;
   }
 });
@@ -216,59 +162,89 @@ onMounted(async () => {
     flex-direction: row;
   }
 }
+
 .sidebar {
   width: 100%;
-  background-color: #fff;
+  background-color: #ffffff;
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 12px;
   display: none;
 }
-
 @media (min-width: 768px) {
-  .mobile-sidebar {
-    display: none
-  }
   .sidebar {
     width: 220px;
     display: block;
   }
+  .mobile-sidebar {
+    display: none;
+  }
 }
-.category,
-.subcategory {
+
+/* 카테고리 버튼 */
+.category {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 8px 12px;
-  margin: 4px 0;
-  border: none;
-  border-radius: 6px;
-  background: #f2f4f6;
-  cursor: pointer;
-  font-size: 14px;
+  margin: 6px 0;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  font-size: 15px;
   color: #333;
-  transition: background 0.2s;
 }
-.category:hover,
+
+/* 소분류 버튼 */
+.subcategory {
+  display: block;
+  width: 100%;
+  padding: 8px 16px 8px 32px; /* ← 왼쪽 들여쓰기 */
+  font-size: 14px;
+  text-align: left;
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 10px;
+  color: #555;
+  transition: background 0.2s ease;
+}
+
+/* hover 스타일 */
+.category:hover {
+  background-color: #f9fafb;
+}
 .subcategory:hover {
-  background-color: #e4efff;
+  background-color: #e9ecef;
 }
-.category.active,
-.subcategory.active {
-  background-color: #cce2ff;
+
+/* 활성화 상태 */
+.category.active {
+  border-color: #b0934d;
+  background-color: #fff8e7;
+  color: #b0934d;
   font-weight: bold;
 }
+.subcategory.active {
+  background-color: #b0934d;
+  color: white;
+  font-weight: bold;
+}
+
+/* 상단 안내 + SNS */
 .top-info {
-  background-color: #fefefe;
+  background-color: #ffffff;
   padding: 18px 12px;
   font-size: 15px;
   line-height: 1.5;
   border-bottom: 1px solid #ddd;
-  color: #333;
+  color: #2b2b2b;
   text-align: center;
 }
 .notice {
   font-weight: bold;
+  color: #a67c00;
   margin-bottom: 4px;
 }
 .socials {
@@ -293,7 +269,6 @@ onMounted(async () => {
   vertical-align: middle;
   margin-right: 4px;
 }
-
 .socials span {
   display: flex;
   align-items: center;
@@ -302,11 +277,7 @@ onMounted(async () => {
 }
 @media (min-width: 768px) {
   .top-info {
-    font-size: 15px;
-    padding: 24px 24px;
-  }
-  .notice {
-    margin-bottom: 2px;
+    padding: 24px;
   }
   .socials {
     flex-direction: row;
@@ -318,11 +289,10 @@ onMounted(async () => {
   }
 }
 
-
 .main {
   flex: 1;
-  background: #fff;
-  padding:0px 16px 16px 16px;
+  background: #ffffff;
+  padding: 0px 16px 16px 16px;
   border-radius: 8px;
   border: 1px solid #ddd;
 }
@@ -332,6 +302,7 @@ onMounted(async () => {
   font-weight: bold;
   color: #444;
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -347,8 +318,9 @@ onMounted(async () => {
     grid-template-columns: repeat(8, 1fr);
   }
 }
+
 .card {
-  background: #fff;
+  background: #ffffff;
   border: 1px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
@@ -356,7 +328,7 @@ onMounted(async () => {
   transition: box-shadow 0.2s, transform 0.1s;
 }
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 .card img {
@@ -368,35 +340,21 @@ onMounted(async () => {
   padding: 10px;
   font-size: 14px;
   text-align: center;
-  background: #fafafa;
+  background: #f8f9fa;
+  color: #1f1f1f;
 }
+
 .category-section {
   margin-bottom: 32px;
 }
 .empty-message {
   padding: 20px;
   color: #888;
-  background: #f9f9f9;
+  background: #f4f4f4;
   text-align: center;
   border-radius: 6px;
   font-size: 14px;
 }
-.admin-buttons {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  align-items: center;
-}
-.admin-button {
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.admin-button:hover {
-  background-color: #0056b3;
-}
 </style>
+
+

@@ -24,7 +24,7 @@
       <!-- 정보 영역 -->
       <div class="info-section">
         <h1>{{ product.name }}</h1>
-        <p class="price">{{ formatPrice(product.price) }}원</p>
+        <!-- <p class="price">{{ formatPrice(product.price) }}원</p> -->
         <p class="description">{{ product.description }}</p>
       </div>
 
@@ -92,23 +92,23 @@ onMounted(async () => {
   mainImage.value = images.length ? images[0].image_url : 'https://via.placeholder.com/500x400?text=No+Image';
 });
 </script>
-
 <style scoped>
 .container {
   max-width: 1024px;
   margin: auto;
-  /* padding: 24px; */
-  font-family: system-ui, sans-serif;
+  font-family: 'Pretendard', system-ui, sans-serif;
+  color: #1f1f1f;
 }
 
 .product-box {
   display: flex;
   flex-wrap: wrap;
   gap: 32px;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .image-section {
@@ -123,18 +123,19 @@ onMounted(async () => {
 .image-title {
   display: none;
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 600;
   margin-bottom: 12px;
-  color: #222;
+  color: #1f1f1f;
 }
 
 .main-image {
   width: 100%;
   max-width: 500px;
-  height: 500px;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 12px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  border: 1px solid #ddd;
 }
 
 .thumbnails {
@@ -148,13 +149,14 @@ onMounted(async () => {
   width: 70px;
   height: 70px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 2px solid transparent;
   cursor: pointer;
+  transition: border-color 0.2s;
 }
 
 .thumbnails img.selected {
-  border-color: #007bff;
+  border-color: #b0934d;
 }
 
 .info-section {
@@ -162,38 +164,47 @@ onMounted(async () => {
 }
 
 .info-section h1 {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 12px;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  line-height: 1.3;
+  color: #222;
 }
 
 .price {
   font-size: 20px;
-  color: #e91e63;
+  color: #b0934d;
   margin-bottom: 16px;
 }
 
 .description {
   font-size: 16px;
   color: #555;
-  line-height: 1.6;
+  line-height: 1.7;
+  white-space: pre-wrap;
 }
 
 .sub-image-list {
   width: 100%;
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .sub-image-grid {
   display: grid;
-  gap: 12px;
+  gap: 16px;
   grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 768px) {
+  .sub-image-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .sub-image-wrapper {
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .sub-image {
@@ -202,16 +213,13 @@ onMounted(async () => {
   object-fit: cover;
 }
 
-@media (min-width: 768px) {
-  .sub-image-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-/* ✅ 반응형: 모바일에서 이미지 위에 상품명 (겹치지 않고 위에 고정) */
+/* 모바일 전용: 이미지 위 상품명 표시 */
 @media (max-width: 640px) {
   .image-title {
     display: block;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 12px;
   }
 
   .info-section h1 {

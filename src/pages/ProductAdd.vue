@@ -6,10 +6,10 @@
       <input v-model="newProduct.name" id="name" required />
 
       <label for="price">가격</label>
-      <input v-model="newProduct.price" id="price" type="number" required />
+      <input v-model="newProduct.price" id="price" type="number" />
 
       <label for="description">상품 설명</label>
-      <textarea v-model="newProduct.description" id="description" required></textarea>
+      <textarea v-model="newProduct.description" id="description"></textarea>
 
       <label for="category">카테고리</label>
       <select v-model="newProduct.category_id" id="category" required>
@@ -17,7 +17,7 @@
       </select>
 
       <label for="subcategory">소분류</label>
-      <select v-model="newProduct.sub_id" id="subcategory" required>
+      <select v-model="newProduct.sub_id" id="subcategory">
         <option v-for="sub in selectedCategory?.subcategories || []" :key="sub.id" :value="sub.id">
           {{ sub.name }}
         </option>
@@ -152,11 +152,11 @@ const addProduct = async () => {
       .from('products')
       .insert([{
         name: newProduct.value.name,
-        price: newProduct.value.price,
-        description: newProduct.value.description,
+        price: newProduct.value.price ? Number(newProduct.value.price) : null,
+        description: newProduct.value.description || null,
         image_url: mainImageUrl,
         category_id: newProduct.value.category_id,
-        sub_id: newProduct.value.sub_id,
+        sub_id: newProduct.value.sub_id || null,
       }])
       .select()
       .single();

@@ -1,112 +1,113 @@
 <template>
-    <header class="header">
-      <div class="title" @click="goToMain()">
-        <img src="../assets/icnos/hamao_logo.png" alt="이미지" class="hamao-logo" />
-        <img src="../assets/icnos/hamao_text.png" alt="HAMAO" class="hamao-text" />
-      </div>
-      <div class="hamburger">
-        <span class="material-symbols-outlined" v-if="route.path === '/'" @click="menuOpen = !menuOpen">menu</span>
-      </div>
-      <form class="search-form">
+  <header class="header">
+    <div class="title" @click="goToMain()">
+      <img src="../assets/icnos/hamao_logo.png" alt="이미지" class="hamao-logo" />
+      <img src="../assets/icnos/hamao_text.png" alt="HAMAO" class="hamao-text" />
+    </div>
+
+    <div class="hamburger">
+      <span class="material-symbols-outlined" v-if="route.path === '/'" @click="menuOpen = !menuOpen">menu</span>
+    </div>
+
+    <form class="search-form" @submit.prevent="onSearch">
+      <div class="search-wrapper">
         <input
-          class="search"
+          class="search-input"
           type="text"
           v-model="search"
           placeholder="검색어를 입력하세요"
         />
-        <button type="submit">
+        <button type="submit" class="search-btn">
           <span class="material-symbols-outlined">search</span>
         </button>
-      </form>
-    </header>
-    <div class="mobile-menu" v-if="menuOpen">
-      <aside class="mobile-sidebar">
-        <div v-for="(cat, catName) in categoryMap" :key="cat.id">
+      </div>
+    </form>
+  </header>
+
+  <div class="mobile-menu" v-if="menuOpen">
+    <aside class="mobile-sidebar">
+      <div v-for="(cat, catName) in categoryMap" :key="cat.id">
+        <button
+          class="category"
+          :class="{ active: selectedCategoryId === cat.id }"
+          @click="toggleCategory(cat.id)"
+        >
+          {{ catName }}
+        </button>
+        <div v-if="selectedCategoryId === cat.id">
           <button
-            class="category"
-            :class="{ active: selectedCategoryId === cat.id }"
-            @click="toggleCategory(cat.id)"
+            v-for="sub in cat.subs"
+            :key="sub.id"
+            class="subcategory"
+            :class="{ active: selectedSubId === sub.id }"
+            @click="toggleSubCategory(sub.id)"
           >
-            {{ catName }}
+            {{ sub.name }}
           </button>
-          <div v-if="selectedCategoryId === cat.id">
-            <button
-              v-for="sub in cat.subs"
-              :key="sub.id"
-              class="subcategory"
-              :class="{ active: selectedSubId === sub.id }"
-              @click="toggleSubCategory(sub.id)"
-            >
-              ㆍ{{ sub.name }}
-            </button>
-          </div>
         </div>
-      </aside>
-    </div>
-  </template>
-  
+      </div>
+    </aside>
+  </div>
+</template>
+
 <script setup>
-    import { ref, onMounted } from 'vue';
-    import { useRouter, useRoute } from 'vue-router';
-    import { supabase } from '../supabase';
+import { ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { supabase } from '../supabase';
 
-    const router = useRouter(); 
-    const route = useRoute(); 
-    const search = ref('');
-    const menuOpen = ref(false)
-    const selectedCategoryId = ref(null);
-    const selectedSubId = ref(null);
-    const categoryMap = ref({});
-    
-    function toggleCategory(id) {
-        if (selectedCategoryId.value === id) {
-            selectedCategoryId.value = null;
-            selectedSubId.value = null;
-        } else {
-            selectedCategoryId.value = id;
-            selectedSubId.value = null;
-        }
-    }
+const router = useRouter();
+const route = useRoute();
+const search = ref('');
+const menuOpen = ref(false);
+const selectedCategoryId = ref(null);
+const selectedSubId = ref(null);
+const categoryMap = ref({});
 
-    function toggleSubCategory(id) {
-        menuOpen.value = false
-        selectedSubId.value = selectedSubId.value === id ? null : id;
-    }
+function toggleCategory(id) {
+  if (selectedCategoryId.value === id) {
+    selectedCategoryId.value = null;
+    selectedSubId.value = null;
+  } else {
+    selectedCategoryId.value = id;
+    selectedSubId.value = null;
+  }
+}
 
-    function goToMain(id) {
-        router.push(`/`);
-    }
+function toggleSubCategory(id) {
+  menuOpen.value = false;
+  selectedSubId.value = selectedSubId.value === id ? null : id;
+}
 
-    function filteredByCategory(categoryId) {
-        return PRODUCTS.value.filter(p => {
-            const matchCat = p.category_id === categoryId;
-            const matchSub = selectedSubId.value ? p.sub_id === selectedSubId.value : true;
-            const matchSearch = p.name.toLowerCase().includes(searchQuery.value.toLowerCase());
-            return matchCat && matchSub && matchSearch;
-        });
-    }
+function goToMain() {
+  router.push(`/`);
+}
 
-    onMounted(async () => {
-        const { data: catData, error: catErr } = await supabase
-            .from('categories')
-            .select('id, name, subcategories(id, name)')
-            .order('id');
+function onSearch() {
+  if (!search.value.trim()) return;
+  router.push(`/search?query=${encodeURIComponent(search.value.trim())}`);
+}
 
-        if (catErr) {
-            console.error('❌ 카테고리 불러오기 실패:', catErr.message);
-        } else {
-            const map = {};
-            catData.forEach(cat => {
-            map[cat.name] = {
-                id: cat.id,
-                subs: cat.subcategories || [],
-            };
-            });
-            categoryMap.value = map;
-        }
+onMounted(async () => {
+  const { data: catData, error: catErr } = await supabase
+    .from('categories')
+    .select('id, name, subcategories(id, name)')
+    .order('id');
+
+  if (catErr) {
+    console.error('❌ 카테고리 불러오기 실패:', catErr.message);
+  } else {
+    const map = {};
+    catData.forEach(cat => {
+      map[cat.name] = {
+        id: cat.id,
+        subs: cat.subcategories || [],
+      };
     });
+    categoryMap.value = map;
+  }
+});
 </script>
-  
+
 <style scoped>
 .header {
   display: flex;
@@ -118,19 +119,10 @@
   top: 0;
   width: 100%;
   box-sizing: border-box;
-  padding-right: 5px;
-  padding-left: 5px;
-  padding-bottom: 16px;
+  padding: 12px 16px;
   border-bottom: 1px solid #ddd;
-  background-color: #fff;
-  z-index: 1;
-}
-
-.mobile-menu {
-  position: fixed;
-  top: 131px;
-  width: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: #f8f9fa;
+  color: #1f1f1f;
   z-index: 1;
 }
 
@@ -138,21 +130,12 @@
   padding: 3px;
 }
 
-.hamburger i {
-  width: 25px;
-  height: 25px;
+.hamburger span,
+.material-symbols-outlined {
+  color: #333;
 }
 
 @media (min-width: 768px) {
-  .container {
-    /* padding: 24px; */
-    margin-top: 70px;
-  }
-  .header {
-    padding-bottom: 0px;
-    padding-left: 24px;
-    padding-right: 24px;
-  }
   .hamburger {
     display: none;
   }
@@ -163,12 +146,11 @@
     width: 35px;
     height: 35px;
   }
-
   .hamao-text {
-    height: 35px;;
+    height: 35px;
   }
   .mobile-sidebar {
-    display: none
+    display: none;
   }
 }
 
@@ -187,65 +169,109 @@
 }
 
 .hamao-text {
-  height: 35px;;
+  height: 35px;
 }
 
+/* 🔍 검색창 */
 .search-form {
-  display: flex;
-  align-items: center;
+  max-width: 400px;
 }
-
-.search-form button {
-  padding: 8px;
-  background-color: #007BFF;
-  border: none;
-  border-radius: 0 4px 4px 0;
-  cursor: pointer;
-  color: white;
+.search-wrapper {
+  position: relative;
+  width: 100%;
 }
-
-.search-form button i {
-  width: 20px;
-  height: 20px;
-}
-
-.search {
-  padding: 8px;
-  font-size: 16px;
-  height: 25px;
-  border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
+.search-input {
+  padding: 10px 44px 10px 16px;
+  font-size: 15px;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   outline: none;
+  transition: all 0.2s ease;
+  border: 1px solid #bbb;
+  background-color: #ffffff;
+  color: #1f1f1f;
 }
+.search-input:focus {
+  border-color: #b0934d;
+  box-shadow: 0 0 0 2px rgba(176, 147, 77, 0.2);
+}
+.search-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: #b0934d;
+  font-size: 22px;
+}
+
+/* 📱 모바일 메뉴 */
+.mobile-menu {
+  position: fixed;
+  top: 131px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
 .mobile-sidebar {
   background-color: #fff;
   border: 1px solid #ddd;
-  border-radius: 0px 0px 8px 8px;
+  border-radius: 0 0 8px 8px;
   padding: 12px;
 }
-.category,
-.subcategory {
+
+/* ✅ 카테고리 & 소분류 (모바일) */
+.mobile-sidebar .category {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 8px 12px;
-  margin: 4px 0;
-  border: none;
-  border-radius: 6px;
-  background: #f2f4f6;
-  cursor: pointer;
-  font-size: 14px;
+  margin: 6px 0;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  font-size: 15px;
   color: #333;
-  transition: background 0.2s;
 }
-.category:hover,
-.subcategory:hover {
-  background-color: #e4efff;
+
+.mobile-sidebar .category:hover {
+  background-color: #f9fafb;
 }
-.category.active,
-.subcategory.active {
-  background-color: #cce2ff;
+
+.mobile-sidebar .category.active {
+  border-color: #b0934d;
+  background-color: #fff8e7;
+  color: #b0934d;
+  font-weight: bold;
+}
+
+.mobile-sidebar .subcategory {
+  display: block;
+  width: 100%;
+  padding: 8px 16px 8px 32px;
+  font-size: 14px;
+  text-align: left;
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 10px;
+  color: #555;
+  transition: background 0.2s ease;
+  margin: 4px 0;
+}
+
+.mobile-sidebar .subcategory:hover {
+  background-color: #e9ecef;
+}
+
+.mobile-sidebar .subcategory.active {
+  background-color: #b0934d;
+  color: white;
   font-weight: bold;
 }
 </style>
-  
