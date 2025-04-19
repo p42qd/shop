@@ -41,8 +41,12 @@ function goToMain() {
 }
 
 function onSearch() {
-  if (!search.value.trim()) return;
-  router.push(`/search?query=${encodeURIComponent(search.value.trim())}`);
+  const trimmed = search.value.trim();
+  if (trimmed.length < 2) {
+    alert('검색어는 최소 2글자 이상 입력해야 합니다.');
+    return;
+  }
+  router.push(`/search?query=${encodeURIComponent(trimmed)}`);
 }
 </script>
 
@@ -145,5 +149,4 @@ function onSearch() {
   color: #b0934d;
   font-size: 22px;
 }
-
 </style>
