@@ -34,10 +34,9 @@ defineEmits(['toggle-menu'])
 const router = useRouter();
 const route = useRoute();
 const search = ref('');
-const categoryMap = ref({});
 
 function goToMain() {
-  router.push(`/`);
+  window.location.href = '/';
 }
 
 function onSearch() {
