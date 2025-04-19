@@ -1,4 +1,31 @@
 <template>
+  <Header @toggle-menu="toggleMenu"/>
+
+  <div class="mobile-menu" v-if="mobileMenuToggle">
+    <aside class="mobile-sidebar">
+      <div v-for="(cat, catName) in categoryMap" :key="cat.id">
+        <button
+          class="category"
+          :class="{ active: selectedCategoryId === cat.id }"
+          @click="toggleCategory(cat.id)"
+        >
+          {{ catName }}
+        </button>
+        <div v-if="selectedCategoryId === cat.id">
+          <button
+            v-for="sub in cat.subs"
+            :key="sub.id"
+            class="subcategory"
+            :class="{ active: selectedSubId === sub.id }"
+            @click="toggleSubCategory(sub.id)"
+          >
+            {{ sub.name }}
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
   <div class="container">
     <div class="layout">
       <!-- 카테고리 사이드바 -->
@@ -76,27 +103,38 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '../supabase';
 
+import Header from '@/components/Header.vue'; 
+
 const router = useRouter();
 const searchQuery = ref('');
 const selectedCategoryId = ref(null);
 const selectedSubId = ref(null);
 const categoryMap = ref({});
 const PRODUCTS = ref([]);
-const menuOpen = ref(false);
+const mobileMenuToggle = ref(false)
+
+function toggleMenu() {
+  mobileMenuToggle.value = !mobileMenuToggle.value
+}
 
 function toggleCategory(id) {
   if (selectedCategoryId.value === id) {
     selectedCategoryId.value = null;
     selectedSubId.value = null;
+    mobileMenuToggle.value = false;
   } else {
     selectedCategoryId.value = id;
     selectedSubId.value = null;
+    const category = Object.values(categoryMap.value).find(cat => cat.id === id);
+    if (!category?.subs?.length) {
+      mobileMenuToggle.value = false;
+    }
   }
 }
 
 function toggleSubCategory(id) {
-  menuOpen.value = false;
   selectedSubId.value = selectedSubId.value === id ? null : id;
+  mobileMenuToggle.value = false;
 }
 
 function goToDetail(id) {
@@ -354,6 +392,74 @@ onMounted(async () => {
   text-align: center;
   border-radius: 6px;
   font-size: 14px;
+}
+
+
+/* 📱 모바일 메뉴 */
+.mobile-menu {
+  position: fixed;
+  top: 145px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.mobile-sidebar {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 0 0 8px 8px;
+  padding: 12px;
+}
+
+/* ✅ 카테고리 & 소분류 (모바일) */
+.mobile-sidebar .category {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 6px 0;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  font-size: 15px;
+  color: #333;
+}
+
+.mobile-sidebar .category:hover {
+  background-color: #f9fafb;
+}
+
+.mobile-sidebar .category.active {
+  border-color: #b0934d;
+  background-color: #fff8e7;
+  color: #b0934d;
+  font-weight: bold;
+}
+
+.mobile-sidebar .subcategory {
+  display: block;
+  width: 100%;
+  padding: 8px 16px 8px 32px;
+  font-size: 14px;
+  text-align: left;
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 10px;
+  color: #555;
+  transition: background 0.2s ease;
+  margin: 4px 0;
+}
+
+.mobile-sidebar .subcategory:hover {
+  background-color: #e9ecef;
+}
+
+.mobile-sidebar .subcategory.active {
+  background-color: #b0934d;
+  color: white;
+  font-weight: bold;
 }
 </style>
 

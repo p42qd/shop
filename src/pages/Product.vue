@@ -1,4 +1,5 @@
 <template>
+  <Header/>
   <div class="container" v-if="product">
     <div class="product-box">
       <!-- 이미지 영역 -->
@@ -51,6 +52,8 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { supabase } from '../supabase';
+
+import Header from '@/components/Header.vue'; 
 
 const route = useRoute();
 const productId = route.params.id;
