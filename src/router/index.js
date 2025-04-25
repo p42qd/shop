@@ -4,6 +4,7 @@ import Product from '../pages/Product.vue';
 import CategoryManager from '../pages/CategoryManager.vue';
 import ProductAdd from '../pages/ProductAdd.vue';
 import Search from '../pages/Search.vue';
+import CategoryProducts from '../pages/CategoryProducts.vue';
 
 const routes = [
   { path: '/', component: Home },
@@ -11,6 +12,7 @@ const routes = [
   { path: '/admin/categories', component: CategoryManager },
   { path: '/admin/products/add', component: ProductAdd },
   { path: '/search', component: Search },
+  { path: '/category/:categoryId', component: CategoryProducts },
 ];
 
 export const router = createRouter({

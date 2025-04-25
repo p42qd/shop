@@ -128,6 +128,7 @@ function toggleCategory(id) {
     const category = Object.values(categoryMap.value).find(cat => cat.id === id);
     if (!category?.subs?.length) {
       mobileMenuToggle.value = false;
+      router.push(`/category/${id}`);
     }
   }
 }
@@ -135,6 +136,7 @@ function toggleCategory(id) {
 function toggleSubCategory(id) {
   selectedSubId.value = selectedSubId.value === id ? null : id;
   mobileMenuToggle.value = false;
+  router.push(`/category/${selectedCategoryId.value}?sub_id=${id}`);
 }
 
 function goToDetail(id) {
