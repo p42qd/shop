@@ -1,5 +1,4 @@
 <template>
-    <Header/>
     <div class="container">
       <h2 class="title">검색 결과: "{{ query }}"</h2>
   
@@ -27,8 +26,6 @@
   import { onMounted, ref, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { supabase } from '../supabase';
-  
-  import Header from '@/components/Header.vue'; 
   
   const route = useRoute();
   const router = useRouter();

@@ -1,31 +1,4 @@
 <template>
-  <Header @toggle-menu="toggleMenu"/>
-
-  <div class="mobile-menu" v-if="mobileMenuToggle">
-    <aside class="mobile-sidebar">
-      <div v-for="(cat, catName) in categoryMap" :key="cat.id">
-        <button
-          class="category"
-          :class="{ active: selectedCategoryId === cat.id }"
-          @click="toggleCategory(cat.id)"
-        >
-          {{ catName }}
-        </button>
-        <div v-if="selectedCategoryId === cat.id">
-          <button
-            v-for="sub in cat.subs"
-            :key="sub.id"
-            class="subcategory"
-            :class="{ active: selectedSubId === sub.id }"
-            @click="toggleSubCategory(sub.id)"
-          >
-            {{ sub.name }}
-          </button>
-        </div>
-      </div>
-    </aside>
-  </div>
-
   <div class="container">
     <div class="layout">
       <!-- 카테고리 사이드바 -->
@@ -73,11 +46,14 @@
           :key="cat.id"
           class="category-section"
         >
+        <div class="category-header">
           <h2>{{ catName }}</h2>
+          <button class="more-button" @click="goToCategory(cat.id)">더보기+</button>
+        </div>
           <div v-if="filteredByCategory(cat.id).length">
             <div class="grid">
               <div
-                v-for="product in filteredByCategory(cat.id).slice(0, 8)"
+                v-for="product in filteredByCategory(cat.id)"
                 :key="product.id"
                 class="card"
                 @click="goToDetail(product.id)"
@@ -90,7 +66,7 @@
             </div>
           </div>
           <div v-else class="empty-message">
-            <p>상품이 없습니다.</p>
+            <p>상품 준비중입니다.</p>
           </div>
         </section>
       </main>
@@ -103,39 +79,33 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '../supabase';
 
-import Header from '@/components/Header.vue'; 
-
 const router = useRouter();
 const searchQuery = ref('');
 const selectedCategoryId = ref(null);
 const selectedSubId = ref(null);
 const categoryMap = ref({});
 const PRODUCTS = ref([]);
-const mobileMenuToggle = ref(false)
-
-function toggleMenu() {
-  mobileMenuToggle.value = !mobileMenuToggle.value
-}
 
 function toggleCategory(id) {
   if (selectedCategoryId.value === id) {
     selectedCategoryId.value = null;
     selectedSubId.value = null;
-    mobileMenuToggle.value = false;
   } else {
     selectedCategoryId.value = id;
     selectedSubId.value = null;
     const category = Object.values(categoryMap.value).find(cat => cat.id === id);
     if (!category?.subs?.length) {
-      mobileMenuToggle.value = false;
       router.push(`/category/${id}`);
     }
   }
 }
 
+function goToCategory(categoryId) {
+  router.push(`/category/${categoryId}`);
+}
+
 function toggleSubCategory(id) {
   selectedSubId.value = selectedSubId.value === id ? null : id;
-  mobileMenuToggle.value = false;
   router.push(`/category/${selectedCategoryId.value}?sub_id=${id}`);
 }
 
@@ -155,12 +125,15 @@ const filteredCategoryMap = computed(() => {
 });
 
 function filteredByCategory(categoryId) {
-  return PRODUCTS.value.filter(p => {
+  const list = PRODUCTS.value.filter(p => {
     const matchCat = p.category_id === categoryId;
     const matchSub = selectedSubId.value ? p.sub_id === selectedSubId.value : true;
     const matchSearch = p.name.toLowerCase().includes(searchQuery.value.toLowerCase());
     return matchCat && matchSub && matchSearch;
   });
+
+  // 모바일 화면이면 최대 4개만 반환
+  return window.innerWidth < 768 ? list.slice(0, 4) : list;
 }
 
 onMounted(async () => {
@@ -396,73 +369,32 @@ onMounted(async () => {
   font-size: 14px;
 }
 
-
-/* 📱 모바일 메뉴 */
-.mobile-menu {
-  position: fixed;
-  top: 145px;
-  width: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1;
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-.mobile-sidebar {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 0 0 8px 8px;
-  padding: 12px;
-}
-
-/* ✅ 카테고리 & 소분류 (모바일) */
-.mobile-sidebar .category {
-  display: block;
-  width: 100%;
-  text-align: left;
-  margin: 6px 0;
-  padding: 10px 16px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-  font-size: 15px;
+.category-header h2 {
+  font-size: 18px;
+  font-weight: bold;
   color: #333;
 }
 
-.mobile-sidebar .category:hover {
-  background-color: #f9fafb;
-}
-
-.mobile-sidebar .category.active {
-  border-color: #b0934d;
-  background-color: #fff8e7;
-  color: #b0934d;
-  font-weight: bold;
-}
-
-.mobile-sidebar .subcategory {
-  display: block;
-  width: 100%;
-  padding: 8px 16px 8px 32px;
-  font-size: 14px;
-  text-align: left;
-  background-color: #f8f9fa;
+.more-button {
+  font-size: 13px;               /* 기존보다 작게 */
+  font-weight: normal;
+  color: #999999;                /* 연한 회색 */
+  background: none;
   border: none;
-  border-radius: 10px;
-  color: #555;
-  transition: background 0.2s ease;
-  margin: 4px 0;
+  cursor: pointer;
+}
+.more-button:hover {
+  color: #b0934d;                /* hover 시 강조 */
+  text-decoration: underline;
 }
 
-.mobile-sidebar .subcategory:hover {
-  background-color: #e9ecef;
-}
-
-.mobile-sidebar .subcategory.active {
-  background-color: #b0934d;
-  color: white;
-  font-weight: bold;
-}
 </style>
 
 
