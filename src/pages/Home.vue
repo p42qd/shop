@@ -1,31 +1,8 @@
 <template>
   <div class="container">
     <div class="layout">
-      <!-- 카테고리 사이드바 -->
-      <aside class="sidebar">
-        <div v-for="(cat, catName) in categoryMap" :key="cat.id">
-          <button
-            class="category"
-            :class="{ active: selectedCategoryId === cat.id }"
-            @click="toggleCategory(cat.id)"
-          >
-            {{ catName }}
-          </button>
-          <div v-if="selectedCategoryId === cat.id">
-            <button
-              v-for="sub in cat.subs"
-              :key="sub.id"
-              class="subcategory"
-              :class="{ active: selectedSubId === sub.id }"
-              @click="toggleSubCategory(sub.id)"
-            >
-              {{ sub.name }}
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      <!-- 상품 섹션 -->
+      <CategorySidebar/>
+      <!-- 상품 메인 -->
       <main class="main">
         <div class="top-info">
           <div class="notice">
@@ -41,108 +18,78 @@
             </div>
           </div>
         </div>
+
         <section
-          v-for="(cat, catName) in filteredCategoryMap"
+          v-for="(cat, catName) in categoryMap"
           :key="cat.id"
           class="category-section"
         >
-        <div class="category-header">
-          <h2>{{ catName }}</h2>
-          <button class="more-button" @click="goToCategory(cat.id)">더보기+</button>
-        </div>
-          <div v-if="filteredByCategory(cat.id).length">
+          <div class="category-header">
+            <h2>{{ catName }}</h2>
+            <button class="more-button" @click="goToCategory(cat.id)">더보기+</button>
+          </div>
+
+          <div v-if="getProductsByCategory(cat.id).length">
             <div class="grid">
               <div
-                v-for="product in filteredByCategory(cat.id)"
+                v-for="product in getProductsByCategory(cat.id)"
                 :key="product.id"
                 class="card"
                 @click="goToDetail(product.id)"
               >
                 <img :src="product.image_url" :alt="product.name" />
                 <div class="card-body">
-                  {{ product.name }}<br />
+                  {{ product.name }}
                 </div>
               </div>
             </div>
           </div>
+
           <div v-else class="empty-message">
             <p>상품 준비중입니다.</p>
           </div>
         </section>
+
       </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '../supabase';
 
+import CategorySidebar from '@/components/CategorySidebar.vue'
+
 const router = useRouter();
-const searchQuery = ref('');
-const selectedCategoryId = ref(null);
-const selectedSubId = ref(null);
 const categoryMap = ref({});
 const PRODUCTS = ref([]);
 
-function toggleCategory(id) {
-  if (selectedCategoryId.value === id) {
-    selectedCategoryId.value = null;
-    selectedSubId.value = null;
-  } else {
-    selectedCategoryId.value = id;
-    selectedSubId.value = null;
-    const category = Object.values(categoryMap.value).find(cat => cat.id === id);
-    if (!category?.subs?.length) {
-      router.push(`/category/${id}`);
-    }
-  }
+// 특정 카테고리 상품 4개 이하로 가져오기
+function getProductsByCategory(categoryId) {
+  const list = PRODUCTS.value.filter(p => p.category_id === categoryId);
+  return window.innerWidth < 768 ? list.slice(0, 4) : list;
 }
 
+// 카테고리 상세 페이지 이동
 function goToCategory(categoryId) {
   router.push(`/category/${categoryId}`);
 }
 
-function toggleSubCategory(id) {
-  selectedSubId.value = selectedSubId.value === id ? null : id;
-  router.push(`/category/${selectedCategoryId.value}?sub_id=${id}`);
-}
-
-function goToDetail(id) {
-  router.push(`/product/${id}`);
-}
-
-const filteredCategoryMap = computed(() => {
-  if (!selectedCategoryId.value) return categoryMap.value;
-  const result = {};
-  for (const [name, cat] of Object.entries(categoryMap.value)) {
-    if (cat.id === selectedCategoryId.value) {
-      result[name] = cat;
-    }
-  }
-  return result;
-});
-
-function filteredByCategory(categoryId) {
-  const list = PRODUCTS.value.filter(p => {
-    const matchCat = p.category_id === categoryId;
-    const matchSub = selectedSubId.value ? p.sub_id === selectedSubId.value : true;
-    const matchSearch = p.name.toLowerCase().includes(searchQuery.value.toLowerCase());
-    return matchCat && matchSub && matchSearch;
-  });
-
-  // 모바일 화면이면 최대 4개만 반환
-  return window.innerWidth < 768 ? list.slice(0, 4) : list;
+// 상품 상세 페이지 이동
+function goToDetail(productId) {
+  router.push(`/product/${productId}`);
 }
 
 onMounted(async () => {
+  // 카테고리 가져오기
   const { data: catData, error: catErr } = await supabase
     .from('categories')
     .select('id, name, subcategories(id, name)')
     .order('id');
 
-  if (!catErr) {
+  if (!catErr && catData) {
     const map = {};
     catData.forEach(cat => {
       map[cat.name] = {
@@ -153,11 +100,12 @@ onMounted(async () => {
     categoryMap.value = map;
   }
 
+  // 상품 가져오기
   const { data: prodData, error: prodErr } = await supabase
     .from('products')
     .select('id, name, price, image_url, category_id, sub_id');
 
-  if (!prodErr) {
+  if (!prodErr && prodData) {
     PRODUCTS.value = prodData;
   }
 });
@@ -176,73 +124,12 @@ onMounted(async () => {
   }
 }
 
-.sidebar {
-  width: 100%;
-  background-color: #ffffff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 12px;
-  display: none;
-}
-@media (min-width: 768px) {
-  .sidebar {
-    width: 220px;
-    display: block;
-  }
-  .mobile-sidebar {
-    display: none;
-  }
-}
-
-/* 카테고리 버튼 */
-.category {
-  display: block;
-  width: 100%;
-  text-align: left;
-  margin: 6px 0;
-  padding: 10px 16px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
+.main {
+  flex: 1;
   background: #ffffff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-  font-size: 15px;
-  color: #333;
-}
-
-/* 소분류 버튼 */
-.subcategory {
-  display: block;
-  width: 100%;
-  padding: 8px 16px 8px 32px; /* ← 왼쪽 들여쓰기 */
-  font-size: 14px;
-  text-align: left;
-  background-color: #f8f9fa;
-  border: none;
-  border-radius: 10px;
-  color: #555;
-  transition: background 0.2s ease;
-}
-
-/* hover 스타일 */
-.category:hover {
-  background-color: #f9fafb;
-}
-.subcategory:hover {
-  background-color: #e9ecef;
-}
-
-/* 활성화 상태 */
-.category.active {
-  border-color: #b0934d;
-  background-color: #fff8e7;
-  color: #b0934d;
-  font-weight: bold;
-}
-.subcategory.active {
-  background-color: #b0934d;
-  color: white;
-  font-weight: bold;
+  padding: 0px 16px 16px 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
 }
 
 /* 상단 안내 + SNS */
@@ -268,7 +155,6 @@ onMounted(async () => {
   gap: 4px;
   line-height: 1.4;
   margin-top: 4px;
-  text-align: center;
 }
 .socials .line {
   display: flex;
@@ -297,23 +183,6 @@ onMounted(async () => {
     justify-content: center;
     gap: 16px;
   }
-  .socials .line {
-    flex-wrap: nowrap;
-  }
-}
-
-.main {
-  flex: 1;
-  background: #ffffff;
-  padding: 0px 16px 16px 16px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-}
-.main h2 {
-  margin-bottom: 16px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #444;
 }
 
 .grid {
@@ -360,6 +229,7 @@ onMounted(async () => {
 .category-section {
   margin-bottom: 32px;
 }
+
 .empty-message {
   padding: 20px;
   color: #888;
@@ -383,18 +253,15 @@ onMounted(async () => {
 }
 
 .more-button {
-  font-size: 13px;               /* 기존보다 작게 */
+  font-size: 13px;
   font-weight: normal;
-  color: #999999;                /* 연한 회색 */
+  color: #999999;
   background: none;
   border: none;
   cursor: pointer;
 }
 .more-button:hover {
-  color: #b0934d;                /* hover 시 강조 */
+  color: #b0934d;
   text-decoration: underline;
 }
-
 </style>
-
-

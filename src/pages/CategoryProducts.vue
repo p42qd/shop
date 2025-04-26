@@ -1,36 +1,69 @@
 <template>
   <div class="container">
-    <!-- 상단 카테고리명 -->
-    <div class="category-header">
-      <h1>{{ categoryName }}</h1>
-    </div>
+    <div class="layout">
+      <!-- PC에서만 카테고리 사이드바 -->
+      <CategorySidebar v-if="isPc" />
 
-    <!-- 상품 목록 -->
-    <div v-if="paginatedProducts.length" class="product-grid">
-      <div
-        v-for="product in paginatedProducts"
-        :key="product.id"
-        class="card"
-        @click="goToDetail(product.id)"
-      >
-        <img :src="product.image_url" :alt="product.name" class="product-image" />
-        <div class="card-body">
-          <div class="product-name">{{ product.name }}</div>
-          <!-- <div class="product-price">{{ product.price.toLocaleString() }}원</div> -->
+      <main class="main">
+        <!-- 카테고리명 -->
+        <div class="category-header">
+          <h1>{{ categoryName }}</h1>
         </div>
-      </div>
-    </div>
 
-    <!-- 상품 없음 -->
-    <div v-else class="empty-message">
-      등록된 상품이 없습니다.
-    </div>
+        <!-- 상품 목록 -->
+        <div v-if="paginatedProducts.length" class="product-grid">
+          <div
+            v-for="product in paginatedProducts"
+            :key="product.id"
+            class="card"
+            @click="goToDetail(product.id)"
+          >
+            <img :src="product.image_url" :alt="product.name" class="product-image" />
+            <div class="card-body">
+              <div class="product-name">{{ product.name }}</div>
+            </div>
+          </div>
+        </div>
 
-    <!-- 페이지네이션 -->
-    <div class="pagination">
-      <button @click="prevPage" :disabled="page === 1">이전</button>
-      <span>{{ page }} / {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="page === totalPages">다음</button>
+        <!-- 상품 없음 -->
+        <div v-else class="empty-message">
+          등록된 상품이 없습니다.
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination">
+          <button @click="jumpBackward" :disabled="page === 1">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M11 6l-6 6 6 6M18 6l-6 6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button @click="prevPage" :disabled="page === 1">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <button
+            v-for="p in pageNumbers"
+            :key="p"
+            :class="{ active: page === p }"
+            @click="goToPage(p)"
+          >
+            {{ p }}
+          </button>
+
+          <button @click="nextPage" :disabled="page === totalPages">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button @click="jumpForward" :disabled="page === totalPages">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M6 6l6 6-6 6M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </main>
     </div>
   </div>
 </template>
@@ -40,6 +73,8 @@ import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/supabase'
 
+import CategorySidebar from '@/components/CategorySidebar.vue'
+
 const router = useRouter()
 const route = useRoute()
 
@@ -47,14 +82,17 @@ const categoryId = ref(route.params.categoryId)
 const categoryName = ref('')
 const products = ref([])
 const page = ref(1)
-const perPage = ref(getPerPage())  // 반응형으로 perPage 계산
+const perPage = ref(getPerPage())
+
+const isPc = ref(window.innerWidth >= 768)
 
 function getPerPage() {
-  return window.innerWidth < 768 ? 8 : 12
+  return window.innerWidth < 768 ? 20 : 40
 }
 
 function handleResize() {
   perPage.value = getPerPage()
+  isPc.value = window.innerWidth >= 768
 }
 
 const totalPages = computed(() =>
@@ -93,15 +131,56 @@ const goToDetail = (id) => {
 const prevPage = () => {
   if (page.value > 1) {
     page.value--
-    window.scrollTo({ top: 0})
+    window.scrollTo({ top: 0 })
   }
 }
+
 const nextPage = () => {
   if (page.value < totalPages.value) {
     page.value++
-    window.scrollTo({ top: 0})
+    window.scrollTo({ top: 0 })
   }
 }
+
+const goToPage = (p) => {
+  if (p >= 1 && p <= totalPages.value) {
+    page.value = p
+    window.scrollTo({ top: 0 })
+  }
+}
+
+// << 버튼: 5페이지 뒤로
+const jumpBackward = () => {
+  page.value = Math.max(1, page.value - 5)
+  window.scrollTo({ top: 0 })
+}
+
+// >> 버튼: 5페이지 앞으로
+const jumpForward = () => {
+  page.value = Math.min(totalPages.value, page.value + 5)
+  window.scrollTo({ top: 0 })
+}
+
+// 페이지 번호 리스트 (최대 5개)
+const pageNumbers = computed(() => {
+  const total = totalPages.value
+  const current = page.value
+  const maxVisible = 5
+
+  let start = Math.max(1, current - Math.floor(maxVisible / 2))
+  let end = start + maxVisible - 1
+
+  if (end > total) {
+    end = total
+    start = Math.max(1, end - maxVisible + 1)
+  }
+
+  const pages = []
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+  return pages
+})
 
 watch(() => route.params.categoryId, async newVal => {
   categoryId.value = newVal
@@ -122,13 +201,26 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 16px;
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 24px;
+}
+@media (min-width: 768px) {
+  .layout {
+    flex-direction: row;
+  }
 }
 
-/* 카테고리 제목 */
+.main {
+  flex: 1;
+  background: #ffffff;
+  padding: 0px 16px 16px 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
 .category-header {
   border-bottom: 2px solid #e0e0e0;
   padding-bottom: 12px;
@@ -140,7 +232,6 @@ onUnmounted(() => {
   color: #a67c00;
 }
 
-/* 상품 그리드 */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -153,11 +244,10 @@ onUnmounted(() => {
 }
 @media (min-width: 1024px) {
   .product-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(8, 1fr);
   }
 }
 
-/* 카드 */
 .card {
   background: #fff;
   border: 1px solid #ddd;
@@ -184,13 +274,7 @@ onUnmounted(() => {
   margin-bottom: 4px;
   color: #333;
 }
-.product-price {
-  font-size: 15px;
-  font-weight: bold;
-  color: #b0934d;
-}
 
-/* 상품 없음 */
 .empty-message {
   padding: 40px;
   text-align: center;
@@ -200,25 +284,45 @@ onUnmounted(() => {
   font-size: 15px;
 }
 
-/* 페이지네이션 */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin-top: 36px;
+  flex-wrap: wrap;
 }
 .pagination button {
-  background-color: #a67c00;
-  color: white;
-  border: none;
-  padding: 8px 16px;
+  background-color: #f0f0f0;
+  color: #555;
+  border: 1px solid #ccc;
+  padding: 8px;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 500;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.pagination button:hover {
+  background-color: #e0e0e0;
 }
 .pagination button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
+}
+.pagination button.active {
+  background-color: #b0934d;
+  color: white;
+  font-weight: 700;
+  border: 1px solid #b0934d;
+}
+.icon {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
 }
 </style>

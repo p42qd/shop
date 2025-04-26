@@ -23,6 +23,8 @@
       </div>
     </form>
   </header>
+
+  <!-- 모바일 메뉴 -->
   <div class="mobile-menu" v-if="mobileMenuToggle">
     <aside class="mobile-sidebar">
       <div v-for="(cat, catName) in categoryMap" :key="cat.id">
@@ -50,16 +52,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { supabase } from '../supabase';
+import { ref, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { supabase } from '../supabase'
 
-const router = useRouter();
-const route = useRoute();
-const search = ref('');
-const selectedCategoryId = ref(null);
-const selectedSubId = ref(null);
-const categoryMap = ref({});
+const router = useRouter()
+const route = useRoute()
+
+const search = ref('')
+const selectedCategoryId = ref(null)
+const selectedSubId = ref(null)
+const categoryMap = ref({})
 const mobileMenuToggle = ref(false)
 
 function toggleMenu() {
@@ -68,56 +71,92 @@ function toggleMenu() {
 
 function toggleCategory(id) {
   if (selectedCategoryId.value === id) {
-    selectedCategoryId.value = null;
-    selectedSubId.value = null;
-    mobileMenuToggle.value = false;
+    selectedCategoryId.value = null
+    selectedSubId.value = null
+    mobileMenuToggle.value = false
   } else {
-    selectedCategoryId.value = id;
-    selectedSubId.value = null;
-    const category = Object.values(categoryMap.value).find(cat => cat.id === id);
+    selectedCategoryId.value = id
+    selectedSubId.value = null
+    const category = Object.values(categoryMap.value).find(cat => cat.id === id)
     if (!category?.subs?.length) {
-      mobileMenuToggle.value = false;
-      router.push(`/category/${id}`);
+      mobileMenuToggle.value = false
+      router.push(`/category/${id}`)
     }
   }
 }
 
 function toggleSubCategory(id) {
-  selectedSubId.value = selectedSubId.value === id ? null : id;
-  mobileMenuToggle.value = false;
-  router.push(`/category/${selectedCategoryId.value}?sub_id=${id}`);
+  selectedSubId.value = selectedSubId.value === id ? null : id
+  mobileMenuToggle.value = false
+  router.push(`/category/${selectedCategoryId.value}?sub_id=${id}`)
 }
 
 function goToMain() {
-  window.location.href = '/';
+  window.location.href = '/'
 }
 
 function onSearch() {
-  const trimmed = search.value.trim();
+  const trimmed = search.value.trim()
   if (trimmed.length < 2) {
-    alert('검색어는 최소 2글자 이상 입력해야 합니다.');
-    return;
+    alert('검색어는 최소 2글자 이상 입력해야 합니다.')
+    return
   }
-  router.push(`/search?query=${encodeURIComponent(trimmed)}`);
+  router.push(`/search?query=${encodeURIComponent(trimmed)}`)
+}
+
+// URL에서 categoryId, subId 세팅하는 함수
+function updateSelectedFromUrl() {
+  const url = new URL(window.location.href)
+  const pathSegments = url.pathname.split('/')
+  if (pathSegments[1] === 'category') {
+    const categoryIdFromUrl = parseInt(pathSegments[2])
+    const subIdFromUrl = parseInt(url.searchParams.get('sub_id'))
+
+    if (!isNaN(categoryIdFromUrl)) {
+      selectedCategoryId.value = categoryIdFromUrl
+    } else {
+      selectedCategoryId.value = null
+    }
+    if (!isNaN(subIdFromUrl)) {
+      selectedSubId.value = subIdFromUrl
+    } else {
+      selectedSubId.value = null
+    }
+  } else {
+    selectedCategoryId.value = null
+    selectedSubId.value = null
+  }
 }
 
 onMounted(async () => {
   const { data: catData, error: catErr } = await supabase
     .from('categories')
     .select('id, name, subcategories(id, name)')
-    .order('id');
+    .order('id')
 
   if (!catErr) {
-    const map = {};
+    const map = {}
     catData.forEach(cat => {
       map[cat.name] = {
         id: cat.id,
         subs: cat.subcategories || [],
-      };
-    });
-    categoryMap.value = map;
+      }
+    })
+    categoryMap.value = map
   }
-});
+
+  // ✅ 최초 페이지 로딩 시 URL에서 세팅
+  updateSelectedFromUrl()
+})
+
+// ✅ 라우트 이동 시도 URL 반영
+watch(
+  () => route.fullPath,
+  () => {
+    updateSelectedFromUrl()
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>
@@ -135,13 +174,12 @@ onMounted(async () => {
   border-bottom: 1px solid #ddd;
   background-color: #f8f9fa;
   color: #1f1f1f;
-  z-index: 1;
+  z-index: 10;
 }
 
 .hamburger {
   padding: 3px;
 }
-
 .hamburger span,
 .material-symbols-outlined {
   color: #333;
@@ -220,14 +258,13 @@ onMounted(async () => {
   font-size: 22px;
 }
 
-
 /* 📱 모바일 메뉴 */
 .mobile-menu {
   position: fixed;
   top: 145px;
   width: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1;
+  z-index: 9;
 }
 
 .mobile-sidebar {
@@ -237,7 +274,6 @@ onMounted(async () => {
   padding: 12px;
 }
 
-/* ✅ 카테고리 & 소분류 (모바일) */
 .mobile-sidebar .category {
   display: block;
   width: 100%;
@@ -252,11 +288,9 @@ onMounted(async () => {
   font-size: 15px;
   color: #333;
 }
-
 .mobile-sidebar .category:hover {
   background-color: #f9fafb;
 }
-
 .mobile-sidebar .category.active {
   border-color: #b0934d;
   background-color: #fff8e7;
@@ -277,11 +311,9 @@ onMounted(async () => {
   transition: background 0.2s ease;
   margin: 4px 0;
 }
-
 .mobile-sidebar .subcategory:hover {
   background-color: #e9ecef;
 }
-
 .mobile-sidebar .subcategory.active {
   background-color: #b0934d;
   color: white;
