@@ -4,8 +4,8 @@
   
       <!-- 상단 버튼 -->
       <div class="button-group">
-        <router-link to="/admin/products/add" class="button">상품 추가</router-link>
-        <router-link to="/admin/calculator" class="button">하마오 계산기</router-link>
+        <router-link to="/desk-controls/products/add" class="button">상품 추가</router-link>
+        <router-link to="/desk-control/calculator" class="button">하마오 계산기</router-link>
       </div>
   
       <!-- 통계 -->
