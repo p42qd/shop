@@ -15,10 +15,10 @@ const routes = [
   { path: '/search', component: Search },
   { path: '/category/:categoryId', component: CategoryProducts },
   
-  { path: '/admin', component: AdminDashboard, meta: { requiresAuth: true } },
-  { path: '/admin/categories', component: CategoryManager, meta: { requiresAuth: true } },
-  { path: '/admin/products/add', component: ProductAdd, meta: { requiresAuth: true } },
-  { path: '/admin/calculator', component: Calculator, meta: { requiresAuth: true } },
+  { path: '/desk-control', component: AdminDashboard, meta: { requiresAuth: true } },
+  { path: '/desk-control/categories', component: CategoryManager, meta: { requiresAuth: true } },
+  { path: '/desk-control/products/add', component: ProductAdd, meta: { requiresAuth: true } },
+  { path: '/desk-control/calculator', component: Calculator, meta: { requiresAuth: true } },
 ];
 
 export const router = createRouter({
@@ -41,7 +41,7 @@ router.beforeEach((to, from, next) => {
     } else {
       const password = prompt('관리자 비밀번호를 입력하세요. :');
 
-      if (password === '1234') { // ← 비밀번호 맞으면
+      if (password === 'eotmd1128^^') { // ← 비밀번호 맞으면
         const now = new Date();
         const expire = new Date(now.getTime() + 60 * 60 * 1000); // 1시간 후
 

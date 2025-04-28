@@ -1,6 +1,6 @@
 <template>
   <header class="header">
-    <div v-if="!route.path.startsWith('/admin')" class="title" @click="goToMain()">
+    <div v-if="!route.path.startsWith('/desk-control')" class="title" @click="goToMain()">
       <img src="../assets/icnos/hamao_logo.png" alt="이미지" class="hamao-logo" />
       <img src="../assets/icnos/hamao_text.png" alt="HAMAO" class="hamao-text" />
     </div>
