@@ -47,6 +47,25 @@
         {{ isLoading ? '등록 중...' : '상품 등록' }}
       </button>
     </form>
+
+    <!-- 실패한 이미지 재업로드 영역 -->
+    <div v-if="failedMainImage || failedSubImages.length" class="retry-section">
+      <h2>업로드 실패한 이미지가 있습니다.</h2>
+
+      <div v-if="failedMainImage">
+        <p>메인 이미지 업로드 실패 ({{ failedMainImage.retryCount }}/3회)</p>
+        <button @click="retryMainImageUpload" :disabled="failedMainImage.retryCount >= 3">
+          메인 이미지 다시 업로드
+        </button>
+      </div>
+
+      <div v-if="failedSubImages.length">
+        <p>서브 이미지 업로드 실패 ({{ failedSubImages.length }}개)</p>
+        <button @click="retrySubImagesUpload" :disabled="failedSubImages.every(item => item.retryCount >= 3)">
+          서브 이미지 다시 업로드
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -70,6 +89,11 @@ const categories = ref([]);
 const selectedCategory = ref(null);
 const categoryMap = ref({});
 const isLoading = ref(false);
+
+// 실패한 이미지 관리
+const failedMainImage = ref(null); // { file, retryCount }
+const failedSubImages = ref([]);   // [{ file, index, retryCount }]
+const productId = ref(null);
 
 const onMainImageChange = (e) => {
   if (e.target?.files?.[0]) {
@@ -111,7 +135,9 @@ onMounted(() => {
 });
 
 const uploadImage = async (file, path) => {
-  const { error } = await supabase.storage.from('product-images').upload(path, file);
+  const { error } = await supabase.storage.from('product-images').upload(path, file, {
+    upsert: true,
+  });
   if (error) throw new Error('이미지 업로드 실패: ' + error.message);
   return path;
 };
@@ -144,43 +170,61 @@ const addProduct = async () => {
       return;
     }
 
-    const mainPath = `products/main-${Date.now()}-${mainImageFile.value.name}`;
-    const savedMainPath = await uploadImage(mainImageFile.value, mainPath);
-    const mainImageUrl = getImageUrl(savedMainPath);
-
-    const { data: productData, error: productError } = await supabase
+    const { data: insertedProduct, error: insertError } = await supabase
       .from('products')
       .insert([{
         name: newProduct.value.name,
         price: newProduct.value.price ? Number(newProduct.value.price) : null,
         description: newProduct.value.description || null,
-        image_url: mainImageUrl,
         category_id: newProduct.value.category_id,
         sub_id: newProduct.value.sub_id || null,
       }])
       .select()
       .single();
 
-    if (productError || !productData) {
-      alert('상품 등록 실패: ' + (productError?.message || '데이터 없음'));
-      console.error('상품 등록 실패:', productError?.message);
+    if (insertError || !insertedProduct) {
+      alert('상품 등록 실패: ' + (insertError?.message || '데이터 없음'));
+      console.error('상품 등록 실패:', insertError?.message);
       return;
     }
 
+    productId.value = insertedProduct.id;
+
+    // 메인 이미지 업로드
+    try {
+      const extension = mainImageFile.value.name.split('.').pop();
+      const mainPath = `products/${productId.value}_main.${extension}`;
+      await uploadImage(mainImageFile.value, mainPath);
+      const mainImageUrl = getImageUrl(mainPath);
+
+      await supabase.from('products').update({
+        image_url: mainImageUrl,
+        main_image_filename: `${productId.value}_main.${extension}`,
+      }).eq('id', productId.value);
+    } catch (error) {
+      console.error('메인 이미지 업로드 실패:', error.message);
+      failedMainImage.value = { file: mainImageFile.value, retryCount: 0 };
+    }
+
+    // 서브 이미지 업로드
     for (let i = 0; i < subImageFiles.value.length; i++) {
       const file = subImageFiles.value[i];
-      const path = `products/sub-${Date.now()}-${i}-${file.name}`;
-      const savedPath = await uploadImage(file, path);
-      const imageUrl = getImageUrl(savedPath);
+      const extension = file.name.split('.').pop();
+      const subPath = `products/${productId.value}_sub_${i}.${extension}`;
 
-      const { error: insertError } = await supabase.from('product_images').insert([{
-        product_id: productData.id,
-        image_url: imageUrl,
-        sort_order: i,
-      }]);
+      try {
+        await uploadImage(file, subPath);
+        const subImageUrl = getImageUrl(subPath);
 
-      if (insertError) {
-        console.error(`서브 이미지 ${i} 등록 실패:`, insertError.message);
+        await supabase.from('product_images').insert([{
+          product_id: productId.value,
+          image_url: subImageUrl,
+          image_filename: `${productId.value}_sub_${i}.${extension}`,
+          sort_order: i,
+        }]);
+      } catch (error) {
+        console.error(`서브 이미지 ${i} 업로드 실패:`, error.message);
+        failedSubImages.value.push({ file, index: i, retryCount: 0 });
       }
     }
 
@@ -191,6 +235,70 @@ const addProduct = async () => {
     console.error('오류 상세:', err);
   } finally {
     isLoading.value = false;
+  }
+};
+
+// 재업로드 함수
+const retryMainImageUpload = async () => {
+  if (!failedMainImage.value) return;
+
+  if (failedMainImage.value.retryCount >= 3) {
+    alert('메인 이미지는 최대 3회까지만 재시도할 수 있습니다.');
+    return;
+  }
+
+  try {
+    const extension = failedMainImage.value.file.name.split('.').pop();
+    const mainPath = `products/${productId.value}_main.${extension}`;
+    await uploadImage(failedMainImage.value.file, mainPath);
+    const mainImageUrl = getImageUrl(mainPath);
+
+    await supabase.from('products').update({
+      image_url: mainImageUrl,
+      main_image_filename: `${productId.value}_main.${extension}`,
+    }).eq('id', productId.value);
+
+    alert('메인 이미지 재업로드 완료');
+    failedMainImage.value = null;
+  } catch (error) {
+    failedMainImage.value.retryCount += 1;
+    alert(`메인 이미지 재업로드 실패 (${failedMainImage.value.retryCount}회 시도됨)`);
+  }
+};
+
+const retrySubImagesUpload = async () => {
+  const tempFailed = [];
+
+  for (const item of failedSubImages.value) {
+    if (item.retryCount >= 3) {
+      tempFailed.push(item);
+      continue;
+    }
+
+    try {
+      const extension = item.file.name.split('.').pop();
+      const subPath = `products/${productId.value}_sub_${item.index}.${extension}`;
+      await uploadImage(item.file, subPath);
+      const subImageUrl = getImageUrl(subPath);
+
+      await supabase.from('product_images').insert([{
+        product_id: productId.value,
+        image_url: subImageUrl,
+        image_filename: `${productId.value}_sub_${item.index}.${extension}`,
+        sort_order: item.index,
+      }]);
+    } catch (error) {
+      console.error(`서브 이미지 ${item.index} 재업로드 실패:`, error.message);
+      tempFailed.push({ ...item, retryCount: item.retryCount + 1 });
+    }
+  }
+
+  if (tempFailed.length === 0) {
+    alert('서브 이미지 재업로드 완료');
+    failedSubImages.value = [];
+  } else {
+    alert(`${tempFailed.length}개 서브 이미지가 여전히 실패했습니다.`);
+    failedSubImages.value = tempFailed;
   }
 };
 </script>
@@ -237,5 +345,11 @@ button:hover {
 button:disabled {
   background-color: #888;
   cursor: not-allowed;
+}
+.retry-section {
+  margin-top: 40px;
+  padding: 16px;
+  background-color: #ffe5e5;
+  border-radius: 8px;
 }
 </style>

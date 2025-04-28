@@ -10,13 +10,13 @@
         </div>
 
         <!-- 서브 이미지 썸네일 -->
-        <div class="thumbnails" v-if="subImages.length">
+        <div class="thumbnails" v-if="allImages.length">
           <img
-            v-for="(img, i) in subImages"
+            v-for="(img, i) in allImages"
             :key="i"
-            :src="img.image_url"
-            @click="mainImage = img.image_url"
-            :class="{ selected: mainImage === img.image_url }"
+            :src="img"
+            @click="mainImage = img"
+            :class="{ selected: mainImage === img }"
           />
         </div>
       </div>
@@ -31,11 +31,11 @@
       <div class="sub-image-list">
         <div class="sub-image-grid">
           <div
-            v-for="(img, i) in subImages"
+            v-for="(img, i) in allImages"
             :key="i"
             class="sub-image-wrapper"
           >
-            <img :src="img.image_url" class="sub-image" />
+            <img :src="img" class="sub-image" />
           </div>
         </div>
       </div>
@@ -58,6 +58,7 @@ const productId = route.params.id;
 const product = ref(null);
 const subImages = ref([]);
 const mainImage = ref('');
+const allImages = ref([]);
 
 function formatPrice(price) {
   return Number(price).toLocaleString();
@@ -89,9 +90,20 @@ onMounted(async () => {
   }
 
   subImages.value = images;
-  mainImage.value = images.length ? images[0].image_url : 'https://via.placeholder.com/500x400?text=No+Image';
+
+  // 썸네일 + 서브 이미지 합치기
+  allImages.value = [
+    product.value.image_url, 
+    ...images.map(img => img.image_url)
+  ].filter(Boolean);
+
+  // 메인 이미지는 항상 allImages 첫 번째로
+  mainImage.value = allImages.value.length ? allImages.value[0] : 'https://via.placeholder.com/500x400?text=No+Image';
+  console.log(subImages.value)
 });
+
 </script>
+
 <style scoped>
 .container {
   max-width: 1024px;
