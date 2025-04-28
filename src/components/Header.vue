@@ -1,8 +1,14 @@
 <template>
   <header class="header">
-    <div class="title" @click="goToMain()">
+    <div v-if="!route.path.startsWith('/admin')" class="title" @click="goToMain()">
       <img src="../assets/icnos/hamao_logo.png" alt="이미지" class="hamao-logo" />
       <img src="../assets/icnos/hamao_text.png" alt="HAMAO" class="hamao-text" />
+    </div>
+
+    <!-- admin일 때 보이는 로고 -->
+    <div v-else class="admin-title" @click="goToAdmin()">
+      <img src="../assets/icnos/hamao_logo.png" alt="이미지" class="hamao-admin-logo" />
+      <img src="../assets/icnos/hamao_admin.png" alt="HAMAO" class="hamao-admin-text" />
     </div>
 
     <div class="hamburger">
@@ -93,6 +99,9 @@ function toggleSubCategory(id) {
 
 function goToMain() {
   window.location.href = '/'
+}
+function goToAdmin() {
+  window.location.href = '/admin'
 }
 
 function onSearch() {
@@ -199,6 +208,18 @@ watch(
   .hamao-text {
     height: 35px;
   }
+  .header .admin-title {
+    width: 310px !important;
+  }
+
+  .hamao-admin-logo {
+    width: 35px;
+    height: 35px;
+  }
+
+  .hamao-admin-text {
+    height: 35px;
+  }
   .mobile-sidebar {
     display: none;
   }
@@ -219,6 +240,24 @@ watch(
 }
 
 .hamao-text {
+  height: 35px;
+}
+
+.admin-title {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin: 15px 0;
+}
+
+.hamao-admin-logo {
+  width: 35px;
+  height: 35px;
+}
+
+.hamao-admin-text {
   height: 35px;
 }
 
