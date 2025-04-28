@@ -4,7 +4,7 @@
   
       <!-- 상단 버튼 -->
       <div class="button-group">
-        <router-link to="/desk-controls/products/add" class="button">상품 추가</router-link>
+        <router-link to="/desk-control/products/add" class="button">상품 추가</router-link>
         <router-link to="/desk-control/calculator" class="button">하마오 계산기</router-link>
       </div>
   
