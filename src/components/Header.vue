@@ -101,7 +101,7 @@ function goToMain() {
   window.location.href = '/'
 }
 function goToAdmin() {
-  window.location.href = '/admin'
+  window.location.href = '/desk-control'
 }
 
 function onSearch() {
