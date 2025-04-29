@@ -167,7 +167,6 @@ watch(
   { immediate: true }
 )
 </script>
-
 <style scoped>
 .header {
   display: flex;
@@ -311,6 +310,17 @@ watch(
   border: 1px solid #ddd;
   border-radius: 0 0 8px 8px;
   padding: 12px;
+
+  /* ✅ 추가: 스크롤 가능하게 처리 */
+  max-height: 70vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+   /* ✅ 스크롤바 숨기기 */
+   scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+.mobile-sidebar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 .mobile-sidebar .category {

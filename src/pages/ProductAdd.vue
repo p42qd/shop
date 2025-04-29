@@ -1,69 +1,70 @@
 <template>
   <div class="container">
     <h1>상품 등록</h1>
-    <form @submit.prevent="addProduct" class="form">
-      <label for="name">상품명</label>
-      <input v-model="newProduct.name" id="name" required />
+    <div class="layout">
+      <!-- 입력 영역 -->
+      <form class="form" @submit.prevent="handleSubmit">
+        <div class="form-block">
+          <label>상품명 *</label>
+          <input v-model="form.name" required />
 
-      <label for="price">가격</label>
-      <input v-model="newProduct.price" id="price" type="number" />
+          <label>가격</label>
+          <input type="number" v-model="form.price" />
 
-      <label for="description">상품 설명</label>
-      <textarea v-model="newProduct.description" id="description"></textarea>
+          <label>상품 설명</label>
+          <textarea v-model="form.description" rows="4" />
 
-      <label for="category">카테고리</label>
-      <select v-model="newProduct.category_id" id="category" required>
-        <option v-for="(cat, catName) in categoryMap" :key="cat.id" :value="cat.id">{{ catName }}</option>
-      </select>
+          <label>카테고리</label>
+          <select v-model="form.category_id">
+            <option disabled value="">선택</option>
+            <option v-for="(cat, catName) in categoryMap" :key="cat.id" :value="cat.id">
+              {{ catName }}
+            </option>
+          </select>
 
-      <label for="subcategory">소분류</label>
-      <select v-model="newProduct.sub_id" id="subcategory">
-        <option v-for="sub in selectedCategory?.subcategories || []" :key="sub.id" :value="sub.id">
-          {{ sub.name }}
-        </option>
-      </select>
+          <label>소분류</label>
+          <select v-model="form.sub_id">
+            <option disabled value="">선택</option>
+            <option v-for="sub in selectedCategory?.subcategories || []" :key="sub.id" :value="sub.id">
+              {{ sub.name }}
+            </option>
+          </select>
 
-      <label for="mainImage">메인 이미지 업로드</label>
-      <input
-        type="file"
-        id="mainImage"
-        ref="mainInputRef"
-        @change="onMainImageChange"
-        accept="image/*"
-        required
-      />
+          <button class="submit" :disabled="isLoading">
+            {{ isLoading ? '등록 중...' : '상품 등록' }}
+          </button>
+        </div>
+      </form>
 
-      <label for="subImages">서브 이미지 업로드 (최대 10개)</label>
-      <input
-        type="file"
-        id="subImages"
-        ref="subInputRef"
-        @change="onSubImageChange"
-        multiple
-        accept="image/*"
-      />
+      <!-- 미리보기 + 업로드 영역 -->
+      <div class="preview">
+        <div class="upload-section">
+          <label class="upload-label" @click="mainInputRef.click()">메인 이미지 업로드 *</label>
+          <input type="file" accept="image/*" @change="onMainImageChange" ref="mainInputRef" class="hidden-input" />
+        </div>
 
-      <button type="submit" :disabled="isLoading">
-        {{ isLoading ? '등록 중...' : '상품 등록' }}
-      </button>
-    </form>
+        <div v-if="mainPreviewUrl">
+          <h3>메인 이미지</h3>
+          <div class="image-box">
+            <img :src="mainPreviewUrl" class="main-image" />
+            <button class="remove-button" @click="removeMainImage">×</button>
+          </div>
+        </div>
 
-    <!-- 실패한 이미지 재업로드 영역 -->
-    <div v-if="failedMainImage || failedSubImages.length" class="retry-section">
-      <h2>업로드 실패한 이미지가 있습니다.</h2>
+        <div class="upload-section">
+          <label class="upload-label" @click="subInputRef.click()">서브 이미지 업로드 (최대 10개)</label>
+          <input type="file" accept="image/*" multiple @change="onSubImageChange" ref="subInputRef" class="hidden-input" />
+        </div>
 
-      <div v-if="failedMainImage">
-        <p>메인 이미지 업로드 실패 ({{ failedMainImage.retryCount }}/3회)</p>
-        <button @click="retryMainImageUpload" :disabled="failedMainImage.retryCount >= 3">
-          메인 이미지 다시 업로드
-        </button>
-      </div>
-
-      <div v-if="failedSubImages.length">
-        <p>서브 이미지 업로드 실패 ({{ failedSubImages.length }}개)</p>
-        <button @click="retrySubImagesUpload" :disabled="failedSubImages.every(item => item.retryCount >= 3)">
-          서브 이미지 다시 업로드
-        </button>
+        <div v-if="subPreviewUrls.length">
+          <h3>서브 이미지</h3>
+          <div class="sub-preview">
+            <div class="image-box" v-for="(url, i) in subPreviewUrls" :key="i">
+              <img :src="url" class="preview-thumbnail" />
+              <button class="remove-button" @click="removeSubImage(i)">×</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -73,283 +74,276 @@
 import { ref, onMounted, watch } from 'vue';
 import { supabase } from '../supabase';
 
-const newProduct = ref({
+const form = ref({
   name: '',
   price: '',
   description: '',
-  category_id: null,
-  sub_id: null,
+  category_id: '',
+  sub_id: ''
 });
 
 const mainImageFile = ref(null);
+const mainPreviewUrl = ref(null);
 const subImageFiles = ref([]);
+const subPreviewUrls = ref([]);
 const mainInputRef = ref(null);
 const subInputRef = ref(null);
 const categories = ref([]);
 const selectedCategory = ref(null);
 const categoryMap = ref({});
 const isLoading = ref(false);
-
-// 실패한 이미지 관리
-const failedMainImage = ref(null); // { file, retryCount }
-const failedSubImages = ref([]);   // [{ file, index, retryCount }]
 const productId = ref(null);
 
+watch(() => form.value.category_id, (newId) => {
+  selectedCategory.value = Object.values(categoryMap.value).find(cat => cat.id === newId);
+});
+
+onMounted(async () => {
+  const { data, error } = await supabase.from('categories').select('id, name, subcategories(id, name)').order('id');
+  if (!error) {
+    categories.value = data;
+    data.forEach(cat => categoryMap.value[cat.name] = cat);
+  }
+});
+
 const onMainImageChange = (e) => {
-  if (e.target?.files?.[0]) {
-    mainImageFile.value = e.target.files[0];
+  const file = e.target.files?.[0];
+  if (file) {
+    mainImageFile.value = file;
+    mainPreviewUrl.value = URL.createObjectURL(file);
   }
 };
 
 const onSubImageChange = (e) => {
-  if (e.target?.files?.length) {
-    subImageFiles.value = Array.from(e.target.files).slice(0, 10);
-  }
+  const files = Array.from(e.target.files).slice(0, 10);
+  subImageFiles.value = files;
+  subPreviewUrls.value = files.map(file => URL.createObjectURL(file));
 };
 
-const fetchCategories = async () => {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('id, name, subcategories(id, name)')
-    .order('id');
-
-  if (!error) {
-    categories.value = data;
-    categories.value.forEach((cat) => {
-      categoryMap.value[cat.name] = cat;
-    });
-  } else {
-    console.error('카테고리 불러오기 실패:', error.message);
-  }
+const removeMainImage = () => {
+  mainImageFile.value = null;
+  mainPreviewUrl.value = null;
+  if (mainInputRef.value) mainInputRef.value.value = '';
 };
 
-watch(
-  () => newProduct.value.category_id,
-  (newCategoryId) => {
-    selectedCategory.value = Object.values(categoryMap.value).find((cat) => cat.id === newCategoryId);
-  }
-);
-
-onMounted(() => {
-  fetchCategories();
-});
+const removeSubImage = (index) => {
+  subImageFiles.value.splice(index, 1);
+  subPreviewUrls.value.splice(index, 1);
+  if (subInputRef.value) subInputRef.value.value = '';
+};
 
 const uploadImage = async (file, path) => {
-  const { error } = await supabase.storage.from('product-images').upload(path, file, {
-    upsert: true,
-  });
-  if (error) throw new Error('이미지 업로드 실패: ' + error.message);
-  return path;
-};
-
-const getImageUrl = (path) => {
+  const { error } = await supabase.storage.from('product-images').upload(path, file, { upsert: true });
+  if (error) throw new Error(error.message);
   const { data } = supabase.storage.from('product-images').getPublicUrl(path);
   return data?.publicUrl || '';
 };
 
 const resetForm = () => {
-  newProduct.value = {
+  form.value = {
     name: '',
     price: '',
     description: '',
-    category_id: null,
-    sub_id: null,
+    category_id: '',
+    sub_id: ''
   };
   mainImageFile.value = null;
+  mainPreviewUrl.value = null;
   subImageFiles.value = [];
+  subPreviewUrls.value = [];
   if (mainInputRef.value) mainInputRef.value.value = '';
   if (subInputRef.value) subInputRef.value.value = '';
 };
 
-const addProduct = async () => {
-  try {
-    isLoading.value = true;
-
-    if (!mainImageFile.value) {
-      alert('메인 이미지를 선택해주세요.');
-      return;
-    }
-
-    const { data: insertedProduct, error: insertError } = await supabase
-      .from('products')
-      .insert([{
-        name: newProduct.value.name,
-        price: newProduct.value.price ? Number(newProduct.value.price) : null,
-        description: newProduct.value.description || null,
-        category_id: newProduct.value.category_id,
-        sub_id: newProduct.value.sub_id || null,
-      }])
-      .select()
-      .single();
-
-    if (insertError || !insertedProduct) {
-      alert('상품 등록 실패: ' + (insertError?.message || '데이터 없음'));
-      console.error('상품 등록 실패:', insertError?.message);
-      return;
-    }
-
-    productId.value = insertedProduct.id;
-
-    // 메인 이미지 업로드
-    try {
-      const extension = mainImageFile.value.name.split('.').pop();
-      const mainPath = `products/${productId.value}_main.${extension}`;
-      await uploadImage(mainImageFile.value, mainPath);
-      const mainImageUrl = getImageUrl(mainPath);
-
-      await supabase.from('products').update({
-        image_url: mainImageUrl,
-        main_image_filename: `${productId.value}_main.${extension}`,
-      }).eq('id', productId.value);
-    } catch (error) {
-      console.error('메인 이미지 업로드 실패:', error.message);
-      failedMainImage.value = { file: mainImageFile.value, retryCount: 0 };
-    }
-
-    // 서브 이미지 업로드
-    for (let i = 0; i < subImageFiles.value.length; i++) {
-      const file = subImageFiles.value[i];
-      const extension = file.name.split('.').pop();
-      const subPath = `products/${productId.value}_sub_${i}.${extension}`;
-
-      try {
-        await uploadImage(file, subPath);
-        const subImageUrl = getImageUrl(subPath);
-
-        await supabase.from('product_images').insert([{
-          product_id: productId.value,
-          image_url: subImageUrl,
-          image_filename: `${productId.value}_sub_${i}.${extension}`,
-          sort_order: i,
-        }]);
-      } catch (error) {
-        console.error(`서브 이미지 ${i} 업로드 실패:`, error.message);
-        failedSubImages.value.push({ file, index: i, retryCount: 0 });
-      }
-    }
-
-    alert('상품이 성공적으로 등록되었습니다.');
-    resetForm();
-  } catch (err) {
-    alert('오류 발생: ' + err.message);
-    console.error('오류 상세:', err);
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-// 재업로드 함수
-const retryMainImageUpload = async () => {
-  if (!failedMainImage.value) return;
-
-  if (failedMainImage.value.retryCount >= 3) {
-    alert('메인 이미지는 최대 3회까지만 재시도할 수 있습니다.');
+const handleSubmit = async () => {
+  if (!mainImageFile.value) {
+    alert('메인 이미지는 필수입니다.');
     return;
   }
 
+  isLoading.value = true;
   try {
-    const extension = failedMainImage.value.file.name.split('.').pop();
-    const mainPath = `products/${productId.value}_main.${extension}`;
-    await uploadImage(failedMainImage.value.file, mainPath);
-    const mainImageUrl = getImageUrl(mainPath);
+    const { data, error } = await supabase
+      .from('products')
+      .insert({
+        name: form.value.name,
+        price: form.value.price ? Number(form.value.price) : null,
+        description: form.value.description,
+        category_id: form.value.category_id || null,
+        sub_id: form.value.sub_id || null
+      })
+      .select()
+      .single();
+
+    if (error || !data) throw new Error(error?.message || '상품 등록 실패');
+    productId.value = data.id;
+
+    const ext = mainImageFile.value.name.split('.').pop();
+    const mainPath = `products/${productId.value}_main.${ext}`;
+    const mainUrl = await uploadImage(mainImageFile.value, mainPath);
 
     await supabase.from('products').update({
-      image_url: mainImageUrl,
-      main_image_filename: `${productId.value}_main.${extension}`,
+      image_url: mainUrl,
+      main_image_filename: `${productId.value}_main.${ext}`
     }).eq('id', productId.value);
 
-    alert('메인 이미지 재업로드 완료');
-    failedMainImage.value = null;
-  } catch (error) {
-    failedMainImage.value.retryCount += 1;
-    alert(`메인 이미지 재업로드 실패 (${failedMainImage.value.retryCount}회 시도됨)`);
-  }
-};
+    await Promise.all(subImageFiles.value.map(async (file, i) => {
+      const ext = file.name.split('.').pop();
+      const subPath = `products/${productId.value}_sub_${i}.${ext}`;
+      const subUrl = await uploadImage(file, subPath);
 
-const retrySubImagesUpload = async () => {
-  const tempFailed = [];
-
-  for (const item of failedSubImages.value) {
-    if (item.retryCount >= 3) {
-      tempFailed.push(item);
-      continue;
-    }
-
-    try {
-      const extension = item.file.name.split('.').pop();
-      const subPath = `products/${productId.value}_sub_${item.index}.${extension}`;
-      await uploadImage(item.file, subPath);
-      const subImageUrl = getImageUrl(subPath);
-
-      await supabase.from('product_images').insert([{
+      await supabase.from('product_images').insert({
         product_id: productId.value,
-        image_url: subImageUrl,
-        image_filename: `${productId.value}_sub_${item.index}.${extension}`,
-        sort_order: item.index,
-      }]);
-    } catch (error) {
-      console.error(`서브 이미지 ${item.index} 재업로드 실패:`, error.message);
-      tempFailed.push({ ...item, retryCount: item.retryCount + 1 });
-    }
-  }
+        image_url: subUrl,
+        image_filename: `${productId.value}_sub_${i}.${ext}`,
+        sort_order: i
+      });
+    }));
 
-  if (tempFailed.length === 0) {
-    alert('서브 이미지 재업로드 완료');
-    failedSubImages.value = [];
-  } else {
-    alert(`${tempFailed.length}개 서브 이미지가 여전히 실패했습니다.`);
-    failedSubImages.value = tempFailed;
+    alert('상품 등록이 완료되었습니다.');
+    resetForm();
+  } catch (err) {
+    alert('오류: ' + err.message);
+    console.error(err);
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
 
 <style scoped>
 .container {
-  max-width: 700px;
-  margin: auto;
-  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
 }
+
 h1 {
-  font-size: 22px;
-  font-weight: bold;
-  margin-bottom: 16px;
+  font-size: 28px;
+  margin-bottom: 32px;
+  text-align: center;
 }
+
+.layout {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
 .form {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-.form label {
-  font-size: 16px;
-  font-weight: bold;
+
+.form-block label {
+  font-weight: 600;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  display: block;
 }
-.form input,
-.form select,
-.form textarea {
-  padding: 8px;
-  font-size: 14px;
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
 }
-button {
-  padding: 10px;
-  background-color: #007bff;
-  color: #fff;
+
+button.submit {
+  margin-top: 20px;
+  padding: 12px;
+  background: #007bff;
+  color: white;
+  font-weight: bold;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  transition: background 0.2s ease;
+  width: 100%;
 }
-button:hover {
-  background-color: #0056b3;
+
+button.submit:hover {
+  background: #0056b3;
 }
-button:disabled {
-  background-color: #888;
-  cursor: not-allowed;
-}
-.retry-section {
-  margin-top: 40px;
-  padding: 16px;
-  background-color: #ffe5e5;
+
+.preview {
+  flex: 1;
+  background: #f8f8f8;
+  padding: 20px;
   border-radius: 8px;
+  border: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.upload-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.upload-label {
+  padding: 10px 16px;
+  background: #007bff;
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.image-box {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.main-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  object-fit: cover;
+}
+
+.preview-thumbnail {
+  width: 90px;
+  height: 90px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  object-fit: cover;
+}
+
+.sub-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.remove-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  cursor: pointer;
 }
 </style>

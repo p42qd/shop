@@ -1,12 +1,8 @@
 <template>
+  <div class="layout">
+    <AdminSidebar/>
     <div class="admin-dashboard">
-      <h1>관리자 대시보드</h1>
-  
-      <!-- 상단 버튼 -->
-      <div class="button-group">
-        <router-link to="/desk-control/products/add" class="button">상품 추가</router-link>
-        <router-link to="/desk-control/calculator" class="button">하마오 계산기</router-link>
-      </div>
+      <!-- <h1>관리자 대시보드</h1> -->
   
       <!-- 통계 -->
       <div class="stats">
@@ -97,11 +93,14 @@
         </div>
       </div>
     </div>
+  </div>
   </template>
   
   <script setup>
   import { ref, onMounted } from 'vue';
   import { supabase } from '../supabase'; // supabase 연결
+
+  import AdminSidebar from '@/components/AdminSidebar.vue';
   
   const totalProducts = ref(0);
   const totalCategories = ref(0);
@@ -251,9 +250,20 @@
   </script>
   
   <style scoped>
-  .admin-dashboard {
-    padding: 20px;
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 24px;
+}
+@media (min-width: 768px) {
+  .layout {
+    flex-direction: row;
   }
+}
+  /* .admin-dashboard {
+    padding: 20px;
+  } */
   
   /* 상단 버튼 */
   .button-group {

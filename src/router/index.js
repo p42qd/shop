@@ -6,6 +6,7 @@ import Search from '../pages/Search.vue';
 
 import AdminDashboard from '../pages/AdminDashboard.vue'
 import CategoryManager from '../pages/CategoryManager.vue';
+import ProductAdmin from '@/pages/ProductAdmin.vue';
 import CategoryProducts from '../pages/CategoryProducts.vue';
 import Calculator from '../pages/Calculator.vue';
 
@@ -17,6 +18,7 @@ const routes = [
   
   { path: '/desk-control', component: AdminDashboard, meta: { requiresAuth: true } },
   { path: '/desk-control/categories', component: CategoryManager, meta: { requiresAuth: true } },
+  { path: '/desk-control/products', component: ProductAdmin, meta: { requiresAuth: true } },
   { path: '/desk-control/products/add', component: ProductAdd, meta: { requiresAuth: true } },
   { path: '/desk-control/calculator', component: Calculator, meta: { requiresAuth: true } },
 ];
