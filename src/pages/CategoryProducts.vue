@@ -1,16 +1,16 @@
 <template>
   <div class="container">
     <div class="layout">
-      <!-- PC에서만 카테고리 사이드바 -->
       <CategorySidebar v-if="isPc" />
 
       <main class="main">
-        <!-- 카테고리명 -->
         <div class="category-header">
-          <h1>{{ categoryName }}</h1>
+          <h1>
+            {{ categoryName }}
+            <span v-if="subcategoryName"> / {{ subcategoryName }}</span>
+          </h1>
         </div>
 
-        <!-- 상품 목록 -->
         <div v-if="paginatedProducts.length" class="product-grid">
           <div
             v-for="product in paginatedProducts"
@@ -25,12 +25,8 @@
           </div>
         </div>
 
-        <!-- 상품 없음 -->
-        <div v-else class="empty-message">
-          등록된 상품이 없습니다.
-        </div>
+        <div v-else class="empty-message">등록된 상품이 없습니다.</div>
 
-        <!-- 페이지네이션 -->
         <div class="pagination">
           <button @click="jumpBackward" :disabled="page === 1">
             <svg class="icon" viewBox="0 0 24 24">
@@ -42,7 +38,6 @@
               <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-
           <button
             v-for="p in pageNumbers"
             :key="p"
@@ -51,7 +46,6 @@
           >
             {{ p }}
           </button>
-
           <button @click="nextPage" :disabled="page === totalPages">
             <svg class="icon" viewBox="0 0 24 24">
               <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -72,18 +66,19 @@
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/supabase'
-
 import CategorySidebar from '@/components/CategorySidebar.vue'
 
 const router = useRouter()
 const route = useRoute()
 
 const categoryId = ref(route.params.categoryId)
+const subcategoryId = ref(route.query.sub_id || null)
+
 const categoryName = ref('')
+const subcategoryName = ref('')
 const products = ref([])
 const page = ref(1)
 const perPage = ref(getPerPage())
-
 const isPc = ref(window.innerWidth >= 768)
 
 function getPerPage() {
@@ -105,10 +100,15 @@ const paginatedProducts = computed(() => {
 })
 
 const fetchProducts = async () => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('category_id', parseInt(categoryId.value))
+  let query = supabase.from('products').select('*')
+
+  if (subcategoryId.value) {
+    query = query.eq('sub_id', parseInt(subcategoryId.value)) // 컬럼명 'sub_id' 주의
+  } else {
+    query = query.eq('category_id', parseInt(categoryId.value))
+  }
+
+  const { data, error } = await query
 
   if (data) products.value = data
   if (error) console.error(error)
@@ -122,6 +122,26 @@ const fetchCategoryName = async () => {
     .single()
 
   if (data) categoryName.value = data.name
+  if (error) console.error(error)
+}
+
+const fetchSubcategoryName = async () => {
+  if (!subcategoryId.value) {
+    subcategoryName.value = ''
+    return
+  }
+
+  const { data, error } = await supabase
+    .from('subcategories')
+    .select('name')
+    .eq('id', parseInt(subcategoryId.value))
+    .single()
+
+  if (data) subcategoryName.value = data.name
+  if (error) {
+    subcategoryName.value = ''
+    console.error(error)
+  }
 }
 
 const goToDetail = (id) => {
@@ -134,34 +154,27 @@ const prevPage = () => {
     window.scrollTo({ top: 0 })
   }
 }
-
 const nextPage = () => {
   if (page.value < totalPages.value) {
     page.value++
     window.scrollTo({ top: 0 })
   }
 }
-
 const goToPage = (p) => {
   if (p >= 1 && p <= totalPages.value) {
     page.value = p
     window.scrollTo({ top: 0 })
   }
 }
-
-// << 버튼: 5페이지 뒤로
 const jumpBackward = () => {
   page.value = Math.max(1, page.value - 5)
   window.scrollTo({ top: 0 })
 }
-
-// >> 버튼: 5페이지 앞으로
 const jumpForward = () => {
   page.value = Math.min(totalPages.value, page.value + 5)
   window.scrollTo({ top: 0 })
 }
 
-// 페이지 번호 리스트 (최대 5개)
 const pageNumbers = computed(() => {
   const total = totalPages.value
   const current = page.value
@@ -182,16 +195,26 @@ const pageNumbers = computed(() => {
   return pages
 })
 
-watch(() => route.params.categoryId, async newVal => {
-  categoryId.value = newVal
-  page.value = 1
-  await fetchCategoryName()
-  await fetchProducts()
-})
+watch(
+  [() => route.params.categoryId, () => route.query.sub_id],
+  async ([newCategoryId, newSubId]) => {
+    categoryId.value = newCategoryId
+    subcategoryId.value = newSubId || null
+    page.value = 1
+    await fetchCategoryName()
+    await fetchSubcategoryName()
+    await fetchProducts()
+  }
+)
 
 onMounted(async () => {
   window.addEventListener('resize', handleResize)
+
+  categoryId.value = route.params.categoryId
+  subcategoryId.value = route.query.sub_id || null
+
   await fetchCategoryName()
+  await fetchSubcategoryName()
   await fetchProducts()
 })
 
@@ -212,7 +235,6 @@ onUnmounted(() => {
     flex-direction: row;
   }
 }
-
 .main {
   flex: 1;
   background: #ffffff;
@@ -220,7 +242,6 @@ onUnmounted(() => {
   border-radius: 8px;
   border: 1px solid #ddd;
 }
-
 .category-header {
   border-bottom: 2px solid #e0e0e0;
   padding-bottom: 12px;
@@ -231,7 +252,6 @@ onUnmounted(() => {
   font-weight: bold;
   color: #a67c00;
 }
-
 .product-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -247,7 +267,6 @@ onUnmounted(() => {
     grid-template-columns: repeat(8, 1fr);
   }
 }
-
 .card {
   background: #fff;
   border: 1px solid #ddd;
@@ -274,7 +293,6 @@ onUnmounted(() => {
   margin-bottom: 4px;
   color: #333;
 }
-
 .empty-message {
   padding: 40px;
   text-align: center;
@@ -283,7 +301,6 @@ onUnmounted(() => {
   border-radius: 8px;
   font-size: 15px;
 }
-
 .pagination {
   display: flex;
   justify-content: center;

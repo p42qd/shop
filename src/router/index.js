@@ -7,6 +7,7 @@ import Search from '../pages/Search.vue';
 import AdminDashboard from '../pages/AdminDashboard.vue'
 import CategoryManager from '../pages/CategoryManager.vue';
 import ProductAdmin from '@/pages/ProductAdmin.vue';
+import EditProduct from '../pages/EditProduct.vue'; // ✅ 파일명 맞춤
 import CategoryProducts from '../pages/CategoryProducts.vue';
 import Calculator from '../pages/Calculator.vue';
 
@@ -20,6 +21,7 @@ const routes = [
   { path: '/desk-control/categories', component: CategoryManager, meta: { requiresAuth: true } },
   { path: '/desk-control/products', component: ProductAdmin, meta: { requiresAuth: true } },
   { path: '/desk-control/products/add', component: ProductAdd, meta: { requiresAuth: true } },
+  { path: '/desk-control/products/edit/:id', component: EditProduct, meta: { requiresAuth: true } }, // ✅ 이름 맞춤
   { path: '/desk-control/calculator', component: Calculator, meta: { requiresAuth: true } },
 ];
 

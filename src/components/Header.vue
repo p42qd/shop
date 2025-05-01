@@ -15,7 +15,7 @@
       <span class="material-symbols-outlined" @click="toggleMenu()">menu</span>
     </div>
 
-    <form class="search-form" @submit.prevent="onSearch">
+    <form class="search-form" v-if="!route.path.startsWith('/desk-control')" @submit.prevent="onSearch">
       <div class="search-wrapper">
         <input
           class="search-input"

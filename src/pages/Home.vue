@@ -2,7 +2,6 @@
   <div class="container">
     <div class="layout">
       <CategorySidebar/>
-      <!-- 상품 메인 -->
       <main class="main">
         <div class="top-info">
           <div class="notice">
@@ -46,7 +45,7 @@
           </div>
 
           <div v-else class="empty-message">
-            <p>상품 준비중입니다.</p>
+            <p>준비중입니다.</p>
           </div>
         </section>
 
@@ -66,18 +65,15 @@ const router = useRouter();
 const categoryMap = ref({});
 const PRODUCTS = ref([]);
 
-// 특정 카테고리 상품 4개 이하로 가져오기
 function getProductsByCategory(categoryId) {
   const list = PRODUCTS.value.filter(p => p.category_id === categoryId);
   return window.innerWidth < 768 ? list.slice(0, 4) : list;
 }
 
-// 카테고리 상세 페이지 이동
 function goToCategory(categoryId) {
   router.push(`/category/${categoryId}`);
 }
 
-// 상품 상세 페이지 이동
 function goToDetail(productId) {
   router.push(`/product/${productId}`);
 }
@@ -100,7 +96,6 @@ onMounted(async () => {
     categoryMap.value = map;
   }
 
-  // 상품 가져오기
   const { data: prodData, error: prodErr } = await supabase
     .from('products')
     .select('id, name, price, image_url, category_id, sub_id');

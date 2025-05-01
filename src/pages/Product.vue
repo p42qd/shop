@@ -4,7 +4,6 @@
       <!-- 이미지 영역 -->
       <div class="image-section">
         <div class="image-wrapper">
-          <!-- 모바일용 상품명 (이미지 위 고정) -->
           <div class="image-title">{{ product.name }}</div>
           <img :src="mainImage" alt="대표 이미지" class="main-image" />
         </div>
@@ -43,7 +42,7 @@
   </div>
 
   <div v-else class="container">
-    <p>상품을 불러오는 중입니다...</p>
+    <p>불러오는 중입니다...</p>
   </div>
 </template>
 
@@ -72,7 +71,7 @@ onMounted(async () => {
     .single();
 
   if (prodErr) {
-    console.error('상품 조회 오류:', prodErr.message);
+    console.error('조회 오류:', prodErr.message);
     return;
   }
 
@@ -225,7 +224,6 @@ onMounted(async () => {
   object-fit: cover;
 }
 
-/* 모바일 전용: 이미지 위 상품명 표시 */
 @media (max-width: 640px) {
   .image-title {
     display: block;
