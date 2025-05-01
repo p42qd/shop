@@ -2,54 +2,49 @@
   <div class="edit-wrapper">
     <h2>상품 수정</h2>
     <div class="edit-container">
-      <!-- 왼쪽: 입력 영역 -->
+      <!-- 왼쪽: 수정 가능 -->
       <div class="form-left">
         <div class="form-group">
           <label>상품명</label>
           <input v-model="product.name" />
         </div>
         <div class="form-group">
-          <label>가격</label>
-          <input v-model="product.price" type="number" />
-        </div>
-        <div class="form-group">
           <label>설명</label>
           <textarea v-model="product.description"></textarea>
         </div>
+
+        <!-- 읽기 전용 필드들 -->
+        <div class="form-group">
+          <label>가격 (읽기 전용)</label>
+          <input :value="product.price" disabled />
+        </div>
         <div class="form-group">
           <label>카테고리</label>
-          <select v-model="product.category_id">
+          <select v-model="product.category_id" disabled>
             <option v-for="cat in categories" :value="cat.id" :key="cat.id">{{ cat.name }}</option>
           </select>
         </div>
         <div class="form-group">
           <label>소분류</label>
-          <select v-model="product.subcategory_id">
+          <select v-model="product.sub_id" disabled>
+            <option value="">-</option>
             <option v-for="sub in subcategories" :value="sub.id" :key="sub.id">{{ sub.name }}</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>메인 이미지 URL</label>
-          <input v-model="product.image_url" />
-        </div>
-        <div class="form-group">
-          <label>서브 이미지 추가</label>
-          <input v-model="newSubImage" placeholder="서브 이미지 URL" />
-          <button @click="addSubImage">추가</button>
-        </div>
+
         <button class="submit-btn" @click="updateProduct">수정 완료</button>
       </div>
 
-      <!-- 오른쪽: 미리보기 영역 -->
+      <!-- 오른쪽: 이미지 미리보기 -->
       <div class="form-right">
-        <h4>메인 이미지 미리보기</h4>
+        <h4>메인 이미지</h4>
         <img v-if="product.image_url" :src="product.image_url" class="preview-main" alt="메인 이미지" />
+        <p v-else>이미지 없음</p>
 
         <h4>서브 이미지</h4>
         <div class="sub-image-list">
           <div v-for="(url, idx) in product.sub_images" :key="idx" class="sub-image-item">
             <img :src="url" class="thumbnail" />
-            <button @click="removeSubImage(idx)">삭제</button>
           </div>
         </div>
       </div>
@@ -75,7 +70,6 @@ const product = reactive({
   sub_images: []
 });
 
-const newSubImage = ref('');
 const categories = ref([]);
 const subcategories = ref([]);
 
@@ -100,37 +94,14 @@ onMounted(async () => {
   subcategories.value = subs || [];
 });
 
-const addSubImage = () => {
-  if (newSubImage.value) {
-    product.sub_images.push(newSubImage.value);
-    newSubImage.value = '';
-  }
-};
-
-const removeSubImage = (idx) => {
-  product.sub_images.splice(idx, 1);
-};
-
 const updateProduct = async () => {
   await supabase
     .from('products')
     .update({
       name: product.name,
-      price: product.price,
-      description: product.description,
-      category_id: product.category_id,
-      subcategory_id: product.subcategory_id,
-      image_url: product.image_url
+      description: product.description
     })
     .eq('id', route.params.id);
-
-  await supabase.from('product_sub_images').delete().eq('product_id', route.params.id);
-  for (const url of product.sub_images) {
-    await supabase.from('product_sub_images').insert({
-      product_id: route.params.id,
-      url
-    });
-  }
 
   router.push('/desk-control/products');
 };
@@ -213,10 +184,5 @@ textarea {
   height: 100px;
   object-fit: cover;
   border: 1px solid #ccc;
-}
-
-.sub-image-item button {
-  margin-top: 4px;
-  font-size: 12px;
 }
 </style>
