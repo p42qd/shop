@@ -100,19 +100,22 @@ const paginatedProducts = computed(() => {
 })
 
 const fetchProducts = async () => {
-  let query = supabase.from('products').select('*')
+  let query = supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false }); // 최신순 정렬
 
   if (subcategoryId.value) {
-    query = query.eq('sub_id', parseInt(subcategoryId.value)) // 컬럼명 'sub_id' 주의
+    query = query.eq('sub_id', parseInt(subcategoryId.value));
   } else {
-    query = query.eq('category_id', parseInt(categoryId.value))
+    query = query.eq('category_id', parseInt(categoryId.value));
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
+  if (data) products.value = data;
+  if (error) console.error(error);
+};
 
-  if (data) products.value = data
-  if (error) console.error(error)
-}
 
 const fetchCategoryName = async () => {
   const { data, error } = await supabase

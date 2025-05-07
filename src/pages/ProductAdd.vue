@@ -14,6 +14,9 @@
           <label>상품 설명</label>
           <textarea v-model="form.description" rows="4" />
 
+          <label>관리자 메모 (관리자 전용)</label>
+          <textarea v-model="form.admin_note" rows="3" />
+
           <label>카테고리</label>
           <select v-model="form.category_id">
             <option disabled value="">선택</option>
@@ -77,7 +80,8 @@ import { supabase } from '../supabase';
 const form = ref({
   name: '',
   price: '',
-  description: '',
+  description: '사이즈:\n색상:',
+  admin_note: '',
   category_id: '',
   sub_id: ''
 });
@@ -143,7 +147,8 @@ const resetForm = () => {
   form.value = {
     name: '',
     price: '',
-    description: '',
+    description: '사이즈:\n색상:',
+    admin_note: '',
     category_id: '',
     sub_id: ''
   };
@@ -169,6 +174,7 @@ const handleSubmit = async () => {
         name: form.value.name,
         price: form.value.price ? Number(form.value.price) : null,
         description: form.value.description,
+        admin_note: form.value.admin_note || null,
         category_id: form.value.category_id || null,
         sub_id: form.value.sub_id || null
       })

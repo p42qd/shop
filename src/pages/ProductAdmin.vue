@@ -39,6 +39,7 @@
           <th>메인 이미지</th>
           <th>서브 이미지 수</th>
           <th>등록일</th>
+          <th>관리자 메모</th>
           <th>관리</th>
         </tr>
       </thead>
@@ -53,6 +54,7 @@
           </td>
           <td>{{ item.sub_image_count }}</td>
           <td>{{ formatDate(item.created_at) }}</td>
+          <td>{{ item.admin_note || '-' }}</td>
           <td>
             <button class="edit-btn" @click="editProduct(item)">수정</button>
             <button class="delete-btn" @click="deleteProduct(item)">삭제</button>
@@ -135,7 +137,9 @@ async function loadPage() {
 
   const from = (page.value - 1) * pageSize;
   const to = from + pageSize - 1;
-  let query = supabase.from('products').select('*', { count: 'exact' });
+  let query = supabase
+    .from('products')
+    .select('id, name, price, description, admin_note, category_id, sub_id, image_url, created_at', { count: 'exact' });
 
   if (filters.value.name) {
     query = query.ilike('name', `%${filters.value.name}%`);

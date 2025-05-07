@@ -9,7 +9,7 @@
           </div>
           <div class="socials">
             <div class="line">
-              <span><img src="../assets/icnos/kakaotalk.png" alt="카카오톡" class="sns-icon" />hamao</span>
+              <span><img src="../asset/icnos/kakaotalk.png" alt="카카오톡" class="sns-icon" />hamao</span>
               <span><img src="../assets/icnos/instagram.png" alt="인스타그램" class="sns-icon" />hamao_select</span>
             </div>
             <div class="line">
@@ -48,7 +48,6 @@
             <p>준비중입니다.</p>
           </div>
         </section>
-
       </main>
     </div>
   </div>
@@ -59,7 +58,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '../supabase';
 
-import CategorySidebar from '@/components/CategorySidebar.vue'
+import CategorySidebar from '@/components/CategorySidebar.vue';
 
 const router = useRouter();
 const categoryMap = ref({});
@@ -79,7 +78,6 @@ function goToDetail(productId) {
 }
 
 onMounted(async () => {
-  // 카테고리 가져오기
   const { data: catData, error: catErr } = await supabase
     .from('categories')
     .select('id, name, subcategories(id, name)')
@@ -98,7 +96,8 @@ onMounted(async () => {
 
   const { data: prodData, error: prodErr } = await supabase
     .from('products')
-    .select('id, name, price, image_url, category_id, sub_id');
+    .select('id, name, price, image_url, category_id, sub_id, created_at')
+    .order('created_at', { ascending: false }); // 최신 등록순 정렬
 
   if (!prodErr && prodData) {
     PRODUCTS.value = prodData;

@@ -8,9 +8,15 @@
           <label>상품명</label>
           <input v-model="product.name" />
         </div>
+
         <div class="form-group">
           <label>설명</label>
           <textarea v-model="product.description"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>관리자 메모</label>
+          <textarea v-model="product.admin_note"></textarea>
         </div>
 
         <!-- 읽기 전용 필드들 -->
@@ -18,12 +24,14 @@
           <label>가격 (읽기 전용)</label>
           <input :value="product.price" disabled />
         </div>
+
         <div class="form-group">
           <label>카테고리</label>
           <select v-model="product.category_id" disabled>
             <option v-for="cat in categories" :value="cat.id" :key="cat.id">{{ cat.name }}</option>
           </select>
         </div>
+
         <div class="form-group">
           <label>소분류</label>
           <select v-model="product.sub_id" disabled>
@@ -64,8 +72,9 @@ const product = reactive({
   name: '',
   price: 0,
   description: '',
+  admin_note: '',
   category_id: null,
-  subcategory_id: null,
+  sub_id: null,
   image_url: '',
   sub_images: []
 });
@@ -76,7 +85,7 @@ const subcategories = ref([]);
 onMounted(async () => {
   const { data: p } = await supabase
     .from('products')
-    .select('*')
+    .select('id, name, price, description, admin_note, category_id, sub_id, image_url')
     .eq('id', route.params.id)
     .single();
   if (p) Object.assign(product, p);
@@ -99,7 +108,8 @@ const updateProduct = async () => {
     .from('products')
     .update({
       name: product.name,
-      description: product.description
+      description: product.description,
+      admin_note: product.admin_note
     })
     .eq('id', route.params.id);
 
