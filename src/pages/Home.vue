@@ -9,7 +9,7 @@
           </div>
           <div class="socials">
             <div class="line">
-              <span><img src="../asset/icnos/kakaotalk.png" alt="카카오톡" class="sns-icon" />hamao</span>
+              <span><img src="../assets/icnos/kakaotalk.png" alt="카카오톡" class="sns-icon" />hamao</span>
               <span><img src="../assets/icnos/instagram.png" alt="인스타그램" class="sns-icon" />hamao_select</span>
             </div>
             <div class="line">
