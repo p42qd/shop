@@ -79,7 +79,7 @@ function toggleCategory(id) {
   if (selectedCategoryId.value === id) {
     selectedCategoryId.value = null
     selectedSubId.value = null
-    mobileMenuToggle.value = false
+    // mobileMenuToggle.value = false
   } else {
     selectedCategoryId.value = id
     selectedSubId.value = null
@@ -299,20 +299,22 @@ watch(
 /* 📱 모바일 메뉴 */
 .mobile-menu {
   position: fixed;
-  top: 145px;
   width: 100%;
+  top: 145px;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 9;
 }
 
 .mobile-sidebar {
+  width: 70%;
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 0 0 8px 8px;
   padding: 12px;
 
   /* ✅ 추가: 스크롤 가능하게 처리 */
-  max-height: 70vh;
+  height: 100vh;
+  max-height: calc(100vh - 160px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
    /* ✅ 스크롤바 숨기기 */

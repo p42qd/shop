@@ -160,36 +160,41 @@ onMounted(async () => {
 
 .arrow-wrapper {
   position: relative;
+  width: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
 .arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.7);
+  background-color: rgba(0, 0, 0, 0.4);
+  color: #fff;
   border: none;
-  font-size: 32px;
-  font-weight: bold;
-  padding: 4px 12px;
-  border-radius: 6px;
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  z-index: 10;
-  transition: background 0.2s;
-}
-
-.arrow.left {
-  left: 0;
-}
-
-.arrow.right {
-  right: 0;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
 .arrow:hover {
-  background: rgba(255, 255, 255, 0.9);
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.arrow.left {
+  left: 10px;
+}
+
+.arrow.right {
+  right: 10px;
 }
 
 .main-image {
