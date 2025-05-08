@@ -48,7 +48,7 @@
 
         <div v-if="mainPreviewUrl">
           <h3>메인 이미지</h3>
-          <div class="image-box">
+          <div class="main-image-box">
             <img :src="mainPreviewUrl" class="main-image" />
             <button class="remove-button" @click="removeMainImage">×</button>
           </div>
@@ -59,14 +59,16 @@
           <input type="file" accept="image/*" multiple @change="onSubImageChange" ref="subInputRef" class="hidden-input" />
         </div>
 
-        <div v-if="subPreviewUrls.length">
-          <h3>서브 이미지</h3>
-          <div class="sub-preview">
-            <div class="image-box" v-for="(url, i) in subPreviewUrls" :key="i">
-              <img :src="url" class="preview-thumbnail" />
-              <button class="remove-button" @click="removeSubImage(i)">×</button>
-            </div>
-          </div>
+        <div v-if="subImageFiles.length">
+          <h3>서브 이미지 (순서 변경 가능)</h3>
+          <draggable v-model="subImageFiles" item-key="index" class="sub-preview" :animation="200">
+            <template #item="{ element, index }">
+              <div class="image-box" v-if="element">
+                <img :src="getPreviewUrl(element)" class="preview-thumbnail" />
+                <button class="remove-button" @click="removeSubImage(index)">×</button>
+              </div>
+            </template>
+          </draggable>
         </div>
       </div>
     </div>
@@ -75,6 +77,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import draggable from 'vuedraggable';
 import { supabase } from '../supabase';
 
 const form = ref({
@@ -89,7 +92,6 @@ const form = ref({
 const mainImageFile = ref(null);
 const mainPreviewUrl = ref(null);
 const subImageFiles = ref([]);
-const subPreviewUrls = ref([]);
 const mainInputRef = ref(null);
 const subInputRef = ref(null);
 const categories = ref([]);
@@ -121,7 +123,6 @@ const onMainImageChange = (e) => {
 const onSubImageChange = (e) => {
   const files = Array.from(e.target.files).slice(0, 10);
   subImageFiles.value = files;
-  subPreviewUrls.value = files.map(file => URL.createObjectURL(file));
 };
 
 const removeMainImage = () => {
@@ -132,8 +133,15 @@ const removeMainImage = () => {
 
 const removeSubImage = (index) => {
   subImageFiles.value.splice(index, 1);
-  subPreviewUrls.value.splice(index, 1);
   if (subInputRef.value) subInputRef.value.value = '';
+};
+
+const getPreviewUrl = (file) => {
+  try {
+    return URL.createObjectURL(file);
+  } catch {
+    return '';
+  }
 };
 
 const uploadImage = async (file, path) => {
@@ -155,7 +163,6 @@ const resetForm = () => {
   mainImageFile.value = null;
   mainPreviewUrl.value = null;
   subImageFiles.value = [];
-  subPreviewUrls.value = [];
   if (mainInputRef.value) mainInputRef.value.value = '';
   if (subInputRef.value) subInputRef.value.value = '';
 };
@@ -308,6 +315,12 @@ button.submit:hover {
 
 .hidden-input {
   display: none;
+}
+
+.main-image-box {
+  width: 200px;
+  position: relative;
+  margin-bottom: 16px;
 }
 
 .image-box {

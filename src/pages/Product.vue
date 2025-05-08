@@ -5,17 +5,22 @@
       <div class="image-section">
         <div class="image-wrapper">
           <div class="image-title">{{ product.name }}</div>
-          <img :src="mainImage" alt="대표 이미지" class="main-image" />
+
+          <div class="arrow-wrapper">
+            <button class="arrow left" @click="prevImage">‹</button>
+            <img :src="mainImage" alt="대표 이미지" class="main-image" />
+            <button class="arrow right" @click="nextImage">›</button>
+          </div>
         </div>
 
-        <!-- 서브 이미지 썸네일 -->
+        <!-- 썸네일 -->
         <div class="thumbnails" v-if="allImages.length">
           <img
             v-for="(img, i) in allImages"
             :key="i"
             :src="img"
-            @click="mainImage = img"
-            :class="{ selected: mainImage === img }"
+            @click="selectImage(i)"
+            :class="{ selected: activeIndex === i }"
           />
         </div>
       </div>
@@ -23,10 +28,10 @@
       <!-- 정보 영역 -->
       <div class="info-section">
         <h1>{{ product.name }}</h1>
-        <!-- <p class="price">{{ formatPrice(product.price) }}원</p> -->
         <p class="description">{{ product.description }}</p>
       </div>
 
+      <!-- 하단 전체 이미지 -->
       <div class="sub-image-list">
         <div class="sub-image-grid">
           <div
@@ -58,10 +63,26 @@ const product = ref(null);
 const subImages = ref([]);
 const mainImage = ref('');
 const allImages = ref([]);
+const activeIndex = ref(0);
 
-function formatPrice(price) {
-  return Number(price).toLocaleString();
-}
+const selectImage = (index) => {
+  activeIndex.value = index;
+  mainImage.value = allImages.value[index];
+};
+
+const prevImage = () => {
+  if (allImages.value.length === 0) return;
+  activeIndex.value =
+    activeIndex.value === 0 ? allImages.value.length - 1 : activeIndex.value - 1;
+  mainImage.value = allImages.value[activeIndex.value];
+};
+
+const nextImage = () => {
+  if (allImages.value.length === 0) return;
+  activeIndex.value =
+    activeIndex.value === allImages.value.length - 1 ? 0 : activeIndex.value + 1;
+  mainImage.value = allImages.value[activeIndex.value];
+};
 
 onMounted(async () => {
   const { data: prod, error: prodErr } = await supabase
@@ -90,17 +111,15 @@ onMounted(async () => {
 
   subImages.value = images;
 
-  // 썸네일 + 서브 이미지 합치기
   allImages.value = [
-    product.value.image_url, 
+    product.value.image_url,
     ...images.map(img => img.image_url)
   ].filter(Boolean);
 
-  // 메인 이미지는 항상 allImages 첫 번째로
-  mainImage.value = allImages.value.length ? allImages.value[0] : 'https://via.placeholder.com/500x400?text=No+Image';
-  console.log(subImages.value)
+  mainImage.value = allImages.value.length
+    ? allImages.value[0]
+    : 'https://via.placeholder.com/500x400?text=No+Image';
 });
-
 </script>
 
 <style scoped>
@@ -137,6 +156,40 @@ onMounted(async () => {
   font-weight: 600;
   margin-bottom: 12px;
   color: #1f1f1f;
+}
+
+.arrow-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.7);
+  border: none;
+  font-size: 32px;
+  font-weight: bold;
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s;
+}
+
+.arrow.left {
+  left: 0;
+}
+
+.arrow.right {
+  right: 0;
+}
+
+.arrow:hover {
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .main-image {
@@ -180,12 +233,6 @@ onMounted(async () => {
   margin-bottom: 16px;
   line-height: 1.3;
   color: #222;
-}
-
-.price {
-  font-size: 20px;
-  color: #b0934d;
-  margin-bottom: 16px;
 }
 
 .description {
